@@ -25,3 +25,8 @@ build/
 # Environment files
 .env
 .env.local 
+# Local AI tooling / IDE config (machine-specific, not project source)
+.ai-dev-kit/
+.claude/
+.cursor/
+.mcp.json

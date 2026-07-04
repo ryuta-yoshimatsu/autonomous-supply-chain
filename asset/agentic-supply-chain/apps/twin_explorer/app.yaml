@@ -1,0 +1,10 @@
+command: ["streamlit", "run", "app.py"]
+
+env:
+  # Bind a SQL warehouse resource named "sql_warehouse" to the app; this injects its id.
+  - name: DATABRICKS_WAREHOUSE_ID
+    valueFrom: sql_warehouse
+  - name: TWIN_CATALOG
+    value: "mickmickstableaws_catalog"
+  - name: TWIN_SCHEMA
+    value: "monitoring"

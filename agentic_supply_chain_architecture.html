@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CoffCoff — Agentic Supply Chain Orchestration</title>
+<style>
+  :root {
+    --espresso: #2c1a10;
+    --coffee: #3b2415;
+    --mocha: #5a3a22;
+    --latte: #c9a27e;
+    --cream: #f6f1ea;
+    --paper: #fffdfa;
+    --ink: #2b2118;
+    --muted: #7c6b5b;
+    --green: #2e7d52;
+    --green-bg: #e6f4ec;
+    --amber: #c9791b;
+    --amber-bg: #fbeedd;
+    --red: #c0392b;
+    --red-bg: #fbe7e4;
+    --line: #e4d9cc;
+    --shadow: 0 6px 22px rgba(44, 26, 16, 0.10);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: linear-gradient(160deg, #f1e8dd 0%, var(--cream) 40%);
+    color: var(--ink);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 40px 28px 80px; }
+
+  header.hero {
+    background: radial-gradient(120% 140% at 0% 0%, var(--mocha) 0%, var(--coffee) 45%, var(--espresso) 100%);
+    color: #f7efe6;
+    border-radius: 22px;
+    padding: 38px 40px;
+    box-shadow: var(--shadow);
+    position: relative;
+    overflow: hidden;
+  }
+  header.hero::after {
+    content: "☕";
+    position: absolute;
+    font-size: 190px;
+    right: -10px;
+    top: -40px;
+    opacity: 0.06;
+    transform: rotate(-12deg);
+  }
+  .kicker {
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    font-size: 12px;
+    color: var(--latte);
+    font-weight: 700;
+    margin: 0 0 10px;
+  }
+  header.hero h1 { margin: 0 0 10px; font-size: 30px; line-height: 1.2; }
+  header.hero p { margin: 0; max-width: 760px; color: #e7d9c8; font-size: 15.5px; }
+
+  .section-title {
+    font-size: 21px;
+    margin: 54px 0 6px;
+    color: var(--coffee);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .section-title .num {
+    background: var(--coffee); color: var(--cream);
+    width: 28px; height: 28px; border-radius: 8px;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700; flex: none;
+  }
+  .section-sub { color: var(--muted); margin: 0 0 22px; font-size: 14.5px; }
+
+  /* Legend */
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; margin: 18px 0 8px; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 7px;
+    font-size: 12.5px; font-weight: 600; padding: 5px 12px; border-radius: 999px;
+    border: 1px solid transparent;
+  }
+  .dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+  .b-green { background: var(--green-bg); color: #1d5b3a; border-color: #bfe0cd; }
+  .b-green .dot { background: var(--green); }
+  .b-amber { background: var(--amber-bg); color: #8a5210; border-color: #f0d6b3; }
+  .b-amber .dot { background: var(--amber); }
+  .b-red { background: var(--red-bg); color: #8e2018; border-color: #f1c4bd; }
+  .b-red .dot { background: var(--red); }
+
+  /* Architecture loop */
+  .loop { display: grid; gap: 16px; margin-top: 8px; }
+  .stage {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-left: 6px solid var(--coffee);
+    border-radius: 16px;
+    padding: 20px 22px;
+    box-shadow: var(--shadow);
+    position: relative;
+  }
+  .stage h3 {
+    margin: 0 0 4px; font-size: 17px; color: var(--coffee);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .stage .tag {
+    font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase;
+    font-weight: 700; color: #fff; background: var(--mocha);
+    padding: 3px 9px; border-radius: 6px;
+  }
+  .stage .role { color: var(--muted); font-size: 13.5px; margin: 0 0 14px; }
+  .stage.plan { border-left-color: #6b4bb0; }
+  .stage.plan .tag { background: #6b4bb0; }
+  .stage.execute { border-left-color: #2f6f8f; }
+  .stage.execute .tag { background: #2f6f8f; }
+  .stage.monitor { border-left-color: var(--green); }
+  .stage.monitor .tag { background: var(--green); }
+  .stage.respond { border-left-color: var(--amber); }
+  .stage.respond .tag { background: var(--amber); }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    font-size: 12.5px; padding: 6px 11px; border-radius: 9px;
+    background: var(--cream); border: 1px solid var(--line); color: var(--ink);
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .chip .dot { width: 8px; height: 8px; }
+  .arrow {
+    text-align: center; color: var(--mocha); font-size: 22px; line-height: 1;
+    margin: -4px 0;
+  }
+  .reloop {
+    margin-top: 4px; text-align: center; font-size: 13px; color: #6b4bb0;
+    font-weight: 600; background: #f0ebf8; border: 1px dashed #c9bbe6;
+    padding: 9px 14px; border-radius: 12px;
+  }
+
+  /* Planning sequence (chronological) */
+  .seq-label { font-size: 13px; font-weight: 700; color: var(--coffee); margin: 2px 0 8px; }
+  .seq-label span { color: var(--muted); font-weight: 400; }
+  .pflow { display: flex; flex-wrap: wrap; align-items: stretch; gap: 7px; }
+  .pstep {
+    flex: 1 1 160px; min-width: 160px;
+    background: var(--cream); border: 1px solid var(--line); border-radius: 12px;
+    padding: 11px 12px 11px; position: relative;
+    display: flex; flex-direction: column; gap: 5px;
+  }
+  .pstep .pn {
+    width: 22px; height: 22px; border-radius: 50%; background: #6b4bb0; color: #fff;
+    font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center;
+  }
+  .pstep .ptxt { font-size: 12.8px; font-weight: 700; color: var(--coffee); line-height: 1.3; }
+  .pstep .psub { font-size: 11px; color: var(--muted); line-height: 1.3; }
+  .pstep .pdot { position: absolute; top: 11px; right: 11px; width: 9px; height: 9px; border-radius: 50%; }
+  .psep { align-self: center; color: #6b4bb0; font-weight: 700; font-size: 17px; flex: none; }
+  .pcross {
+    margin-top: 11px; font-size: 12.5px; color: #43356b; background: #f0ebf8;
+    border: 1px dashed #c9bbe6; border-radius: 10px; padding: 9px 13px;
+  }
+  @media (max-width: 760px) { .psep { display: none; } }
+
+  /* Spotlight summary */
+  .spotlight {
+    margin-top: 22px; background: var(--paper);
+    border: 1px solid var(--line); border-left: 6px solid var(--green);
+    border-radius: 16px; padding: 22px 24px; box-shadow: var(--shadow);
+  }
+  .spotlight h3 { margin: 0 0 4px; font-size: 17px; color: var(--coffee); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .spotlight .tag { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; font-weight: 700; color: #fff; background: var(--green); padding: 3px 9px; border-radius: 6px; }
+  .spotlight .lead { color: var(--muted); font-size: 13.5px; margin: 0 0 16px; }
+  .rc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .rc-card { background: var(--cream); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
+  .rc-card h4 { margin: 0 0 9px; font-size: 14px; color: var(--coffee); }
+  .rc-card ul { margin: 0; padding-left: 18px; }
+  .rc-card li { font-size: 12.8px; margin-bottom: 6px; color: var(--ink); }
+  .rc-foot { margin-top: 14px; font-size: 12.8px; color: #43356b; background: #f0ebf8; border: 1px dashed #c9bbe6; border-radius: 10px; padding: 9px 13px; }
+  @media (max-width: 760px) { .rc-grid { grid-template-columns: 1fr; } }
+  .rc-why { margin-top: 12px; font-size: 12.8px; color: #8a5210; background: var(--amber-bg); border: 1px solid #f0d6b3; border-radius: 10px; padding: 11px 14px; line-height: 1.55; }
+  .rc-why strong { color: #7a4708; }
+
+  /* Capability table */
+  table { width: 100%; border-collapse: collapse; background: var(--paper);
+    border-radius: 14px; overflow: hidden; box-shadow: var(--shadow); font-size: 13.8px; }
+  thead th {
+    background: var(--coffee); color: var(--cream); text-align: left;
+    padding: 13px 14px; font-size: 12.5px; letter-spacing: 0.4px;
+  }
+  tbody td { padding: 12px 14px; border-top: 1px solid var(--line); vertical-align: top; }
+  tbody tr:nth-child(even) { background: #fbf7f1; }
+  td .cap { font-weight: 700; color: var(--coffee); }
+  td.status { white-space: nowrap; font-weight: 700; }
+  .s-green { color: var(--green); }
+  .s-amber { color: var(--amber); }
+  .s-red { color: var(--red); }
+
+  /* Gap section */
+  .gap-banner {
+    background: linear-gradient(100deg, #fbe7e4 0%, #fbeedd 100%);
+    border: 1px solid #f0c9bf; border-radius: 16px; padding: 18px 22px;
+    margin: 8px 0 22px; color: #7a2018; font-size: 14.5px;
+  }
+  .gap-banner strong { color: #8e2018; }
+  .gap-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .gap-card {
+    background: var(--paper); border: 1px solid var(--line); border-radius: 14px;
+    padding: 18px 18px 16px; box-shadow: var(--shadow); position: relative;
+    border-top: 4px solid var(--red);
+  }
+  .gap-card.partial { border-top-color: var(--amber); }
+  .gap-card h4 { margin: 0 0 4px; font-size: 15.5px; color: var(--coffee); display:flex; align-items:center; gap:8px; flex-wrap: wrap; }
+  .gap-card .stg { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #6b4bb0; background: #f0ebf8; border: 1px solid #d6c9ef; padding: 2px 7px; border-radius: 6px; flex: none; }
+  .gap-card .miss {
+    font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+    padding: 2px 8px; border-radius: 6px; background: var(--red-bg); color: var(--red);
+  }
+  .gap-card.partial .miss { background: var(--amber-bg); color: var(--amber); }
+  .gap-card.done { border-top-color: var(--green); }
+  .gap-card.done .miss { background: var(--green-bg); color: #1d5b3a; }
+  .gap-card p { margin: 8px 0 0; font-size: 13.3px; color: var(--ink); }
+  .gap-card .lbl { font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.6px;
+    color: var(--muted); font-weight: 700; margin-top: 12px; display: block; }
+  .gap-card .fill { color: #1d5b3a; font-weight: 600; }
+
+  .note {
+    margin-top: 28px; background: #f0ebf8; border: 1px solid #d6c9ef;
+    border-radius: 14px; padding: 18px 22px; font-size: 14px; color: #43356b;
+  }
+  .strength-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .strength-card {
+    background: var(--paper); border: 1px solid var(--line); border-radius: 14px;
+    padding: 17px 18px; box-shadow: var(--shadow); border-top: 4px solid #6b4bb0;
+  }
+  .strength-card h4 { margin: 0 0 7px; font-size: 15px; color: var(--coffee); }
+  .strength-card p { margin: 0; font-size: 13.2px; color: var(--ink); }
+  @media (max-width: 760px) { .strength-grid { grid-template-columns: 1fr; } }
+  .footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; text-align: center; }
+  .footer code { background: #efe6d9; padding: 2px 6px; border-radius: 5px; }
+
+  @media (max-width: 760px) {
+    .gap-grid { grid-template-columns: 1fr; }
+    header.hero { padding: 28px 24px; }
+    .wrap { padding: 24px 16px 60px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <p class="kicker">CoffCoff · Agentic Supply Chain</p>
+    <h1>Agentic Supply Chain Orchestration</h1>
+    <p>A closed-loop planning platform where agents help planners <em>watch, reason, recommend, and act with approval</em> — sensing demand, generating supply / production / inventory / distribution plans, optimizing across constraints, simulating scenarios, and re-planning when reality drifts. Built on the <code style="background:rgba(255,255,255,.12);padding:1px 6px;border-radius:5px;color:#f3e7d7">mickmickstableaws_catalog.gold</code> dataset.</p>
+  </header>
+
+  <!-- LEGEND -->
+  <div class="legend">
+    <span class="badge b-green"><span class="dot"></span>Ready today</span>
+    <span class="badge b-amber"><span class="dot"></span>Partial — derivable with caveats</span>
+    <span class="badge b-red"><span class="dot"></span>Missing — must be built / synthesized</span>
+  </div>
+
+  <!-- ARCHITECTURE -->
+  <h2 class="section-title"><span class="num">1</span>Architecture — Closed-Loop Orchestration</h2>
+  <p class="section-sub">Four stages connected into a continuous loop. The orchestration agent feeds deviations back into planning, so the system re-plans rather than only reacting.</p>
+
+  <div class="loop">
+
+    <div class="stage plan">
+      <h3><span class="tag">Plan</span> The planning brain</h3>
+      <p class="role">Generates and reconciles the plan across all functions — concurrently where possible, executed in a chronological sequence.</p>
+      <p class="seq-label">Planning sequence <span>— chronological order, with what each step does</span></p>
+      <div class="pflow">
+        <div class="pstep"><span class="pdot" style="background:var(--green)"></span><span class="pn">1</span><span class="ptxt">Demand planning</span><span class="psub">Forecast future demand per product from sales history (Databricks-native forecasting).</span></div>
+        <span class="psep">→</span>
+        <div class="pstep"><span class="pdot" style="background:var(--amber)"></span><span class="pn">2</span><span class="ptxt">Inventory optimization</span><span class="psub">Set safety stock &amp; reorder points to hit target service levels at minimum stock.</span></div>
+        <span class="psep">→</span>
+        <div class="pstep"><span class="pdot" style="background:var(--amber)"></span><span class="pn">3</span><span class="ptxt">Supply / MRP planning</span><span class="psub">Net demand against on-hand &amp; open POs to generate planned purchase orders.</span></div>
+        <span class="psep">→</span>
+        <div class="pstep"><span class="pdot" style="background:var(--amber)"></span><span class="pn">4</span><span class="ptxt">Production scheduling</span><span class="psub">Sequence orders against finite work-centre capacity (ROASTER, PACKING).</span></div>
+        <span class="psep">→</span>
+        <div class="pstep"><span class="pdot" style="background:var(--amber)"></span><span class="pn">5</span><span class="ptxt">Distribution planning</span><span class="psub">Replenish the outlets from the central roastery to meet local demand.</span></div>
+        <span class="psep">→</span>
+        <div class="pstep"><span class="pdot" style="background:var(--amber)"></span><span class="pn">6</span><span class="ptxt">S&amp;OP / IBP</span><span class="psub">Reconcile demand vs constrained supply vs finance — needed because the pipeline is sequential &amp; capacity-constrained — then commit the approved plan-of-record.</span></div>
+      </div>
+      <div class="pcross">↺ Cross-cutting at every step — <strong>scenario &amp; what-if simulation</strong> + <strong>optimization engine</strong> &nbsp;<span class="badge b-red" style="padding:2px 9px"><span class="dot"></span>to build</span></div>
+      <p class="role" style="margin:14px 0 0"><strong>Writes:</strong> plan-of-record + scenario versions → Lakebase (Postgres) + Delta &nbsp;<span class="badge b-red" style="padding:2px 9px"><span class="dot"></span>store must be built</span></p>
+    </div>
+
+    <div class="arrow">▼ &nbsp;committed plan</div>
+
+    <div class="stage execute">
+      <h3><span class="tag">Execute / Source</span> System of record</h3>
+      <p class="role">The transactional facts the plan is measured against, refreshed on a near-real-time schedule.</p>
+      <div class="chips">
+        <span class="chip"><span class="dot" style="background:var(--green)"></span>gold SAP facts (17 tables)</span>
+        <span class="chip"><span class="dot" style="background:var(--green)"></span>Inventory snapshots + ledger (in gold)</span>
+        <span class="chip"><span class="dot" style="background:var(--green)"></span>Outbound deliveries + billing (in gold)</span>
+        <span class="chip"><span class="dot" style="background:var(--green)"></span>Demand plan (in gold)</span>
+        <span class="chip"><span class="dot" style="background:var(--red)"></span>Shipments / transport (to build)</span>
+        <span class="chip"><span class="dot" style="background:var(--amber)"></span>Scheduled refresh (snapshot to 2026-05-23)</span>
+      </div>
+    </div>
+
+    <div class="arrow">▼</div>
+
+    <div class="stage monitor">
+      <h3><span class="tag">Monitor</span> Control tower</h3>
+      <p class="role">Real-time visibility of state, KPIs, and plan-vs-actual deviation.</p>
+      <div class="chips">
+        <span class="chip"><span class="dot" style="background:var(--green)"></span>KPI semantic layer + kpi_timeseries</span>
+        <span class="chip"><span class="dot" style="background:var(--green)"></span>AI/BI dashboard + Genie</span>
+        <span class="chip"><span class="dot" style="background:var(--green)"></span>Alerts + anomaly detection</span>
+        <span class="chip"><span class="dot" style="background:var(--green)"></span>Interactive twin-network graph + node drilldown</span>
+      </div>
+    </div>
+
+    <div class="arrow">▼ &nbsp;deviation detected</div>
+
+    <div class="stage respond">
+      <h3><span class="tag">Respond</span> Agentic orchestrator</h3>
+      <p class="role">An LLM agent diagnoses, simulates scenarios, and proposes or commits a re-plan + downstream actions — with a human-in-the-loop gate for consequential moves.</p>
+      <div class="chips">
+        <span class="chip">Diagnose deviation</span>
+        <span class="chip">Run / compare scenarios</span>
+        <span class="chip">Notify · expedite PO · reschedule · rebalance inventory</span>
+        <span class="chip"><span class="dot" style="background:var(--amber)"></span>HITL approval</span>
+      </div>
+    </div>
+
+    <div class="reloop">↻ &nbsp;Re-plan loop — committed actions feed back into <strong>Plan</strong></div>
+
+  </div>
+
+  <!-- CAPABILITY REQUIREMENTS -->
+  <h2 class="section-title"><span class="num">2</span>What Full Supply Chain Orchestration Requires</h2>
+  <p class="section-sub">Each planning &amp; orchestration capability, what it does, the inputs it needs, and how ready the CoffCoff data is.</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th style="width:20%">Capability</th>
+        <th style="width:26%">What it does</th>
+        <th style="width:30%">Data / inputs needed</th>
+        <th style="width:24%">Readiness in mickmickstableaws_catalog.gold</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="cap">Demand planning / sensing</span></td>
+        <td>Statistical forecast + near-term demand sensing</td>
+        <td>Sales history, calendar, product hierarchy</td>
+        <td class="status s-amber">🟡 salesorders history present; <code>demandplan</code> table exists but is empty<br><span style="font-weight:400;color:var(--muted)">first step: generate forecast rows</span></td>
+      </tr>
+      <tr>
+        <td><span class="cap">Inventory optimization</span></td>
+        <td>Safety stock, reorder points, multi-echelon targets, days-of-cover</td>
+        <td>On-hand stock, lead time + variability, service-level targets</td>
+        <td class="status s-amber">🟡 on-hand now in gold (<code>inventorysnapshots</code> / <code>inventoryledger</code>);<br><span style="font-weight:400;color:var(--muted)">still need policy params (service levels)</span></td>
+      </tr>
+      <tr>
+        <td><span class="cap">Supply / procurement planning (MRP)</span></td>
+        <td>Net requirements → planned purchase orders</td>
+        <td>Demand, on-hand, on-order (open POs), BOM, lead times</td>
+        <td class="status s-amber">🟡 BOM, open POs &amp; on-hand in gold;<br><span style="font-weight:400;color:var(--muted)">needs populated demand forecast + MRP engine; supplier OTIF / on-time / in-full measured line-level (quantity-weighted variant optional)</span></td>
+      </tr>
+      <tr>
+        <td><span class="cap">Production planning &amp; finite scheduling</span></td>
+        <td>Capacity-constrained order sequencing across work centres</td>
+        <td>Routings, work-centre capacity, order pool</td>
+        <td class="status s-amber">🟡 capacity &amp; order pool present;<br><span style="font-weight:400;color:var(--muted)">no routing master / setup matrix; scheduler to build. Production-twin lead-time figures are recorded actuals (not a capacity model); quality percents are unweighted item-level averages (quantity-weighted optional)</span></td>
+      </tr>
+      <tr>
+        <td><span class="cap">Distribution planning</span></td>
+        <td>Replenish outlets from the central roastery</td>
+        <td>Outlet network, outlet-level demand, transport</td>
+        <td class="status s-amber">🟡 <code>outbounddeliveries</code> in gold;<br><span style="font-weight:400;color:var(--muted)">still need outlet network + shipments. Distribution-twin service rates (on-time / in-full / OTIF) are line-level (fill rate is qty-weighted); transit time is a derived estimate, not carrier data</span></td>
+      </tr>
+      <tr>
+        <td><span class="cap">S&amp;OP / IBP</span></td>
+        <td>Reconcile demand vs supply vs financials at aggregate</td>
+        <td>All layers above + cost / financials</td>
+        <td class="status s-amber">🟡 derivable once layers exist<br><span style="font-weight:400;color:var(--muted)">costs in order headers/items</span></td>
+      </tr>
+      <tr>
+        <td><span class="cap">Scenario &amp; what-if simulation</span></td>
+        <td>Compare plan options (expedite vs delay, demand surge)</td>
+        <td>Versioned plan store + a re-run engine</td>
+        <td class="status s-red">❌ build scenario /<br><span style="font-weight:400;color:var(--muted)">plan-of-record store</span></td>
+      </tr>
+      <tr>
+        <td><span class="cap">Optimization engine</span></td>
+        <td>Solve trade-offs (cost vs service vs capacity)</td>
+        <td>Constraints + objective function</td>
+        <td class="status s-red">❌ build with a solver<br><span style="font-weight:400;color:var(--muted)">(OR-Tools / PuLP) in jobs</span></td>
+      </tr>
+      <tr>
+        <td><span class="cap">Control tower + orchestration</span></td>
+        <td>Monitor execution, detect deviation, re-plan / respond</td>
+        <td>KPI layer + alerts + agent</td>
+        <td class="status s-green">✅ scoped on existing facts</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- DATA GAP -->
+  <h2 class="section-title"><span class="num">3</span>Data Readiness — Gaps Filled vs Still Missing</h2>
+  <div class="gap-banner">
+    Moving to <strong><code>mickmickstableaws_catalog.gold</code></strong> closed most of the earlier gaps: <strong>inventory, outbound deliveries, and billing are now present</strong>. The <code>demandplan</code> table exists but is <strong>empty</strong>, so generating the demand forecast is the first prerequisite. What remains to build is the <strong>demand forecast, transport layer, distribution network model, planning parameters, production routings &amp; scheduler, and the plan-of-record store</strong>. Cards below are marked <span style="color:#1d5b3a;font-weight:700">Now in gold</span>, <span style="color:var(--amber);font-weight:700">Empty / first step</span>, or <span style="color:var(--red);font-weight:700">Missing</span>.
+  </div>
+
+  <div class="gap-grid">
+
+    <div class="gap-card partial">
+      <h4><span class="stg">0–1 · Demand</span> Demand forecast <span class="miss">Empty / first step</span></h4>
+      <p>The <code>demandplan</code> table exists but has <strong>0 rows</strong>. Before hydrating the Demand Twin, generate a Databricks-native demand forecast from sales history and write forecast rows to the agreed demand-plan table.</p>
+      <span class="lbl">Blocks</span>
+      <p>Demand Twin forecast state, forecast accuracy / bias, inventory projections, MRP netting, production priorities, and distribution planning.</p>
+      <span class="lbl">How we fill it</span>
+      <p class="fill">Run the demand forecasting job first, then hydrate <code>demand_twin_current</code> and <code>demand_twin_timeseries</code>.</p>
+    </div>
+
+    <div class="gap-card partial">
+      <h4><span class="stg">1 · Demand</span> Order → requested-delivery lead time <span class="miss">Data realism gap</span></h4>
+      <p>In <code>gold.salesorders</code>, <code>RequestedDeliveryDate_VDATU</code> averages <strong>0 days</strong> after <code>CreationDate_ERDAT</code> — every order is requested for same-day delivery. With no order-to-request lead time, the forward order book (open demand) collapses to ~1 week and overdue demand is overstated.</p>
+      <span class="lbl">Affects</span>
+      <p>Demand Twin open-demand vs backlog split, and any due-date / promise-date planning.</p>
+      <span class="lbl">How we fill it</span>
+      <p class="fill">Fix in synthetic data generation (out of scope for this build): set <code>RequestedDeliveryDate_VDATU = CreationDate_ERDAT +</code> a realistic, channel/material-specific lead time.</p>
+    </div>
+
+    <div class="gap-card done">
+      <h4><span class="stg">2 · Inventory</span> On-hand inventory <span class="miss">Now in gold</span></h4>
+      <p>Stock-on-hand and movements are now available: <code>inventorysnapshots</code>, <code>inventoryledger</code>, and <code>inventoryopeningstock</code> in gold — point-in-time stock can be reconstructed.</p>
+      <span class="lbl">Unblocks</span>
+      <p>Days-of-cover, stockout risk, safety-stock targets, inventory optimization, MRP netting.</p>
+      <span class="lbl">Source</span>
+      <p class="fill">gold.inventorysnapshots / inventoryledger / inventoryopeningstock</p>
+    </div>
+
+    <div class="gap-card">
+      <h4><span class="stg">2–3 · Inventory / Supply</span> Planning parameters master <span class="miss">Missing</span></h4>
+      <p>No service levels, safety-stock policies, reorder points, or a consolidated lead-time master — the "rules" the inventory and MRP engines optimize against.</p>
+      <span class="lbl">Blocks</span>
+      <p>Inventory optimization, MRP policy, S&amp;OP targets, scenario constraints.</p>
+      <span class="lbl">How we fill it</span>
+      <p class="fill">Model a planning_parameters master (per material: service level, lead time, policy).</p>
+    </div>
+
+    <div class="gap-card">
+      <h4><span class="stg">4 · Production</span> Production routings &amp; finite scheduler <span class="miss">Missing</span></h4>
+      <p>No <strong>routing master</strong> (operation sequence, standard times per work centre) and no sequence-dependent <strong>setup / changeover matrix</strong>; calendars are day-level only. Routings are merely referenced on order headers and observed after the fact in <code>productionconfirmations</code>.</p>
+      <span class="lbl">Blocks</span>
+      <p>Finite-capacity scheduling, order sequencing, realistic start/finish times, bottleneck planning.</p>
+      <span class="lbl">How we fill it</span>
+      <p class="fill">Model a routings master + setup matrix, then build the finite-capacity scheduler (heuristic + OR-Tools).</p>
+    </div>
+
+    <div class="gap-card">
+      <h4><span class="stg">5 · Distribution</span> Outlet / distribution network <span class="miss">Missing</span></h4>
+      <p>The data describes a central roastery only — the multi-echelon <strong>nodes (outlets / DCs)</strong> and their demand are not modelled.</p>
+      <span class="lbl">Blocks</span>
+      <p>Multi-echelon inventory, distribution planning, outlet replenishment, network optimization.</p>
+      <span class="lbl">How we fill it</span>
+      <p class="fill">Synthesize an outlet master + outlet-level demand allocation from sales history.</p>
+    </div>
+
+    <div class="gap-card done">
+      <h4><span class="stg">5 · Distribution</span> Outbound deliveries <span class="miss">Now in gold</span></h4>
+      <p>Outbound fulfillment is now modelled in <code>outbounddeliveries</code> (actual ship date, delivered qty, linked to sales orders), with <code>billinginvoices</code> for the cash side.</p>
+      <span class="lbl">Unblocks</span>
+      <p>Outbound OTIF, fill rate, perfect-order, delivery plan-vs-actual, order-to-cash.</p>
+      <span class="lbl">Source</span>
+      <p class="fill">gold.outbounddeliveries + gold.billinginvoices</p>
+    </div>
+
+    <div class="gap-card partial">
+      <h4><span class="stg">5 · Distribution</span> Delivery coverage of demand <span class="miss">Data realism gap</span></h4>
+      <p><code>gold.outbounddeliveries</code> holds shipments for only <strong>3 of the 21 sold materials</strong> (2,148 lines). The other 18 materials have no <code>DeliveryQuantity_LFIMG</code> / <code>ReferenceSDDocument_VGBEL</code> rows, so when the Demand Twin nets the order book against deliveries (ordered − delivered) those materials appear 100% unfulfilled.</p>
+      <span class="lbl">Affects</span>
+      <p>Demand Twin backlog (ordered − delivered), Distribution Twin fill rate / OTIF coverage.</p>
+      <span class="lbl">How we fill it</span>
+      <p class="fill">Fix in synthetic data generation (out of scope for this build): generate <code>outbounddeliveries</code> for all shipped materials, linked via <code>ReferenceSDDocument_VGBEL</code> / <code>ReferenceSDDocumentItem_VGPOS</code>.</p>
+    </div>
+
+    <div class="gap-card">
+      <h4><span class="stg">5 · Distribution</span> Shipments &amp; transport <span class="miss">Missing</span></h4>
+      <p><code>Route_ROUTE</code> is empty and there is a <strong>single shipping point</strong> across all 1.9M order lines — no carrier, route, or freight data.</p>
+      <span class="lbl">Blocks</span>
+      <p>Freight cost, route / lane performance, transport optimization, distribution planning.</p>
+      <span class="lbl">How we fill it</span>
+      <p class="fill">Synthesize shipments (carrier, route, freight cost, ship / arrive timestamps).</p>
+    </div>
+
+    <div class="gap-card">
+      <h4><span class="stg">6 · S&amp;OP / Orchestration</span> Plan-of-record &amp; scenario store <span class="miss">Missing</span></h4>
+      <p>There is nowhere to hold a committed plan or compare versioned what-if scenarios — required for any orchestration loop.</p>
+      <span class="lbl">Blocks</span>
+      <p>Scenario / what-if, re-plan loop, agent commits, plan-vs-actual.</p>
+      <span class="lbl">How we fill it</span>
+      <p class="fill">Stand up a Lakebase (Postgres) plan-of-record + scenario store, mirrored to Delta.</p>
+    </div>
+
+    <div class="gap-card partial">
+      <h4><span class="stg">Cross-cutting</span> Near-real-time data feed <span class="miss">Partial</span></h4>
+      <p>Data is a batch snapshot to <strong>2026-05-23</strong> — "current" means as of that date, not today. There is no live feed.</p>
+      <span class="lbl">Blocks</span>
+      <p>True "real-time" visibility, timely deviation detection.</p>
+      <span class="lbl">How we fill it</span>
+      <p class="fill">Scheduled near-real-time refresh job (chosen approach: batch / near-real-time).</p>
+    </div>
+
+  </div>
+
+  <!-- DESIGN STRENGTHENERS -->
+  <h2 class="section-title"><span class="num">4</span>Design Strengtheners — Make It Robust &amp; Realistic</h2>
+  <p class="section-sub">These guardrails keep the system agentic and operationally useful without pretending it is fully autonomous from day one.</p>
+
+  <div class="strength-grid">
+    <div class="strength-card">
+      <h4>Human approval for consequential actions</h4>
+      <p>Agents can diagnose, simulate, draft, and recommend. Planner approval is required before committing a new plan, changing production schedules, expediting purchase orders, or contacting customers / suppliers.</p>
+    </div>
+    <div class="strength-card">
+      <h4>Evidence-backed recommendations</h4>
+      <p>Every recommendation should cite the KPI deviation, affected materials / orders / customers, likely root cause, scenario comparison, and expected service / cost impact before asking for approval.</p>
+    </div>
+    <div class="strength-card">
+      <h4>Separate source facts from planning state</h4>
+      <p>Keep <code>gold</code> as read-only source-of-truth. Write forecasts, policies, scenarios, recommendations, approvals, and committed plans to a separate planning store (Lakebase + Delta).</p>
+    </div>
+    <div class="strength-card">
+      <h4>Bounded agent tools and audit logs</h4>
+      <p>Expose narrow governed tools (run scenario, draft supplier note, propose schedule change, notify owner). Log every tool call, input, output, approver, and committed action for traceability.</p>
+    </div>
+    <div class="strength-card">
+      <h4>Fail-safe automation</h4>
+      <p>If data is stale, policies are missing, or a solver fails, the agent should stop at diagnosis and escalation — not invent a plan or take action on uncertain inputs.</p>
+    </div>
+    <div class="strength-card">
+      <h4>Materialized KPI and plan layers</h4>
+      <p>Precompute KPI time series and plan outputs incrementally. Dashboards, alerts, and agents should read stable curated tables, not recompute heavy logic from base facts on every interaction.</p>
+    </div>
+  </div>
+
+  <div class="note">
+    <strong>Expectation to set:</strong> we can build a credible Databricks-native <em>functional surface</em> for agentic supply chain planning — demand, supply, inventory, production scheduling, distribution, S&amp;OP, scenario / what-if, control tower, and agent-assisted orchestration. We will <strong>not</strong> match the depth of fully-concurrent, multi-echelon optimization that specialist planning suites (e.g. OMP) have tuned over decades; we approximate it with <code>Databricks-native forecasting</code> + targeted solver-based modules + the orchestration agent, planned heuristic-first with a re-plan loop. For a POC of "orchestrate the entire supply chain," that is more than enough to be compelling and extensible.
+  </div>
+
+  <div class="footer">
+    CoffCoff Agentic Supply Chain · Closed-Loop Orchestration Architecture · readiness verified against <code>mickmickstableaws_catalog.gold</code>
+  </div>
+
+</div>
+</body>
+</html>
