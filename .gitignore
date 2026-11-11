@@ -29,4 +29,5 @@ build/
 .ai-dev-kit/
 .claude/
 .cursor/
+.isaac/
 .mcp.json

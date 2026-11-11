@@ -77,16 +77,21 @@ asset/agentic-supply-chain/
     00_setup_monitoring_schema.ipynb
     01_source_mapping_and_readiness_assessment.ipynb
     02_generate_demand_forecast.ipynb
-    03_demand_twin.ipynb
-    04_inventory_twin.ipynb
-    05_procurement_twin.ipynb
-    06_production_twin.ipynb
-    07_distribution_twin.ipynb
-    08_relationship_layer.ipynb        (v_network_nodes / v_network_edges graph views)
-    09_kpi_metric_views.ipynb          (governed UC metric views per twin)
-    10_control_tower_dashboard.ipynb   (AI/BI Lakeview control-tower dashboard)
-    11_genie_space.ipynb               (Genie Space over the twin tables)
+    03_planning_config.ipynb           (monitoring.planning_config - single source of tunable params; run BEFORE the twins)
+    04_demand_twin.ipynb
+    05_inventory_twin.ipynb
+    06_procurement_twin.ipynb
+    07_production_twin.ipynb
+    08_distribution_twin.ipynb
+    09_relationship_layer.ipynb        (v_network_nodes / v_network_edges graph views + v_material_bom_edges planning BOM)
+    10_kpi_metric_views.ipynb          (governed UC metric views per twin)
+    11_control_tower_dashboard.ipynb   (AI/BI Lakeview control-tower dashboard)
+    12_genie_space.ipynb               (Genie Space over the twin tables)
+    13_events.ipynb                    (monitoring.events - cross-twin detection layer)
+    14_inventory_policy.ipynb          (monitoring.inventory_policy - conformal reorder point; writes recommended_action onto events)
+    15_mrp.ipynb                       (monitoring.mrp_plan - time-phased weekly MRP: applies nb 14 order-up-to per week + multi-level BOM explosion -> planned orders)
     ... (per-stage notebooks added incrementally)
+    (02 also emits monitoring.demand_forecast_error_sets - conformal calibration for 14)
   apps/
     twin_explorer/                     (Streamlit app: per-twin explorer + Network graph tab)
 ```
@@ -111,7 +116,7 @@ asset/agentic-supply-chain/
 
 ## Reference implementation (CoffCoff)
 
-- Source: `mickmickstableaws_catalog.gold` (SAP S/4HANA-style gold layer).
+- Source: `mickmickstableawscoff_catalog.gold` (SAP S/4HANA-style gold layer).
 - Note: `gold.demandplan` exists but is **empty** — which is exactly why step 0 generates the
 forecast first. This is the typical real-world starting condition.
 

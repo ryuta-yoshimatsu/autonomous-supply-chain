@@ -49,13 +49,13 @@ Copy this checklist and track progress:
 - [x] Step 4: Digital twin state layer (demand, inventory, procurement, production, distribution)
 - [x] Step 5: KPI / control tower / twin views (metric views + AI/BI dashboard + Genie + network app)
 - [ ] Step 6: Events + alerts
-- [ ] Step 7: Planning engines
+- [~] Step 7: Planning engines (inventory policy + MRP DONE; production scheduling [blocked] / distribution next)
 - [ ] Step 8: Plan-of-record + scenario store (Lakebase)
 - [ ] Step 9: Agentic orchestration
 ```
 
 ### Step 1 — Foundation (do before anything else)
-Create the derived schema. (The shared `supply_chain_events` inbox is added later, in Step 6,
+Create the derived schema. (The shared `events` inbox is added later, in Step 6,
 alongside event detection.)
 Notebook: `notebooks/00_setup_monitoring_schema.ipynb`.
 
@@ -78,16 +78,19 @@ Build five separate twins, **one notebook per twin**, in this order (each is ind
 runnable and schedulable):
 
 ```
-- [ ] 03_demand_twin.ipynb         -> demand_twin_current        + demand_twin_metrics_timeseries
-- [ ] 04_inventory_twin.ipynb      -> inventory_twin_current     + inventory_twin_metrics_timeseries
-- [ ] 05_procurement_twin.ipynb    -> procurement_twin_current   + procurement_twin_metrics_timeseries
-- [ ] 06_production_twin.ipynb      -> production_twin_current    + production_twin_metrics_timeseries
-- [ ] 07_distribution_twin.ipynb   -> distribution_twin_current  + distribution_twin_metrics_timeseries
-- [ ] 08_relationship_layer.ipynb  -> v_network_nodes            + v_network_edges (graph views)
+- [ ] 03_planning_config.ipynb     -> planning_config            + v_resolved_config (governed params — run BEFORE the twins)
+- [ ] 04_demand_twin.ipynb         -> demand_twin_current        + demand_twin_metrics_timeseries
+- [ ] 05_inventory_twin.ipynb      -> inventory_twin_current     + inventory_twin_metrics_timeseries
+- [ ] 06_procurement_twin.ipynb    -> procurement_twin_current   + procurement_twin_metrics_timeseries
+- [ ] 07_production_twin.ipynb     -> production_twin_current    + production_twin_metrics_timeseries
+- [ ] 08_distribution_twin.ipynb   -> distribution_twin_current  + distribution_twin_metrics_timeseries
+- [ ] 09_relationship_layer.ipynb  -> v_network_nodes            + v_network_edges (graph views)
 ```
 
-Start with **demand** then **inventory** (inventory connects everything), then procurement,
-production, distribution.
+Seed **`03_planning_config`** first (governed thresholds/params the twins read via `cfg(...)`),
+then start with **demand** then **inventory** (inventory connects everything), then procurement,
+production, distribution. (`03_planning_config` is described in detail under Step 6 — it is
+numbered early so its parameters exist before any detection notebook consumes them.)
 
 **Reproducible per-twin procedure** (follow for every twin notebook):
 1. **Config cell** — `source_*` / `target_*` / `monitoring_schema` widgets, plus a source
@@ -108,8 +111,8 @@ production, distribution.
 `gold`, write `monitoring`; keep the canonical output columns stable, change only how they
 are computed; mark business logic with `# TODO — EXTEND for your business`.
 
-Status: **all five twins done** (`03_demand` / `04_inventory` / `05_procurement` /
-`06_production` / `07_distribution`).
+Status: **all five twins done** (`04_demand` / `05_inventory` / `06_procurement` /
+`07_production` / `08_distribution`).
 
 ### Step 5 — KPI / control tower / twin views
 Derive KPIs from the twins (not raw source). Build dashboards + Genie + **direct twin views**
@@ -119,16 +122,16 @@ so users can inspect twin state, history, dependencies, and risk — not only KP
 Deploy against `<your-profile>`. NOTE: the workspace MCP server config
 (`.cursor/mcp.json`) was repointed from profile `aws` (wrong workspace) to `<your-profile>`;
 if MCP tools aren't reachable, reload the MCP server or use the CLI/SDK as the notebooks do.
-1. **Metric views** — `notebooks/09_kpi_metric_views.ipynb` →
+1. **Metric views** — `notebooks/10_kpi_metric_views.ipynb` →
    `monitoring.{demand,inventory,procurement,production,distribution}_metrics`. UC metric views
    (`CREATE OR REPLACE VIEW ... WITH METRICS LANGUAGE YAML`) over each `*_twin_current`, with dimensions
    (material/group/plant/channel/supplier) and `MEASURE()` KPIs (OTIF, fill rate, backlog, stockouts,
    bottlenecks, yield, WMAPE, ...). Reusable by dashboard, Genie, and alerts. Needs DBR 17.2+/serverless.
-2. **AI/BI dashboard** "Supply Chain Control Tower" — `notebooks/10_control_tower_dashboard.ipynb`
+2. **AI/BI dashboard** "Supply Chain Control Tower" — `notebooks/11_control_tower_dashboard.ipynb`
    (deploys via SDK `POST /api/2.0/lakeview/dashboards` then `/published`). 7 datasets (tested first),
    cross-twin KPI counters + per-domain bar charts + detail tables. Rules: **test every dataset SQL
    before deploying**; widget `fields[].name` must equal `encodings.fieldName`.
-3. **Genie Space** "Supply Chain Digital Twins" — `notebooks/11_genie_space.ipynb` (builds the
+3. **Genie Space** "Supply Chain Digital Twins" — `notebooks/12_genie_space.ipynb` (builds the
    `serialized_space`: `version: 2`, `data_sources.tables` [**sorted by identifier**],
    `instructions.text_instructions`; creates via `POST /api/2.0/genie/spaces`). Points at the 10 twin
    tables (`*_twin_current` + `*_twin_metrics_timeseries`) with tailored guidance (grain per twin,
@@ -136,13 +139,16 @@ if MCP tools aren't reachable, reload the MCP server or use the CLI/SDK as the n
 
 **Twin network views (interactive graph + node drilldown) — DONE (Option C).** The twins are
 exposed as one typed graph and the app lets users drill into any node's operational data.
-1. **Relationship layer (views-first, in `monitoring`)** — notebook `notebooks/08_relationship_layer.ipynb`:
+1. **Relationship layer (views-first, in `monitoring`)** — notebook `notebooks/09_relationship_layer.ipynb`:
    - `v_network_nodes` — typed nodes (`RAW_MATERIAL`/`FINISHED_GOOD` [materials split by type:
      ROH/HIBE vs FERT/HALB/HAWA-or-produced, `node_id` stays `MATERIAL:<matnr>`], `SUPPLIER`, `PLANT`,
      `WORK_CENTRE`, `CHANNEL`, `CUSTOMER`, `REGION`), each carrying its twin `status`
      (GREEN/AMBER/RED) + `metric_json`.
    - `v_network_edges` — typed edges (`SUPPLIES`, `COMPONENT_OF` [BOM], `PRODUCED_AT`, `STOCKED_AT`,
      `ROUTED_THROUGH`, `SHIPS_TO`, `SOLD_TO`), carrying `weight` (volume) + `attrs_json` (lead time / OTIF / share).
+   - `v_material_bom_edges` — **planning-grade BOM** (parent→component with `qty_per`, `scrap`, `comp_uom`,
+     material types, level) for active BOMs. Graph-lossy `v_network_edges` is for viz; this is what the **MRP
+     engine (nb 15) reads** instead of `gold.billofmaterials`, so downstream engines stay on `monitoring`.
    - Plain UC **views** over `gold` + the twins (live, no copy). Column comments declared inline in
      the `CREATE VIEW` header. Shared graph API for the app, Genie, and the agent.
    - Current shape (21-material demo): **92 nodes / 206 edges, 0 dangling**.
@@ -168,16 +174,78 @@ exposed as one typed graph and the app lets users drill into any node's operatio
 > **Fix applied while building this (2026-07):** the production twin joined work centres on
 > `productionorders.PrimaryWorkCentre_ARBID_Item`, which is **entirely NULL** in the source. The
 > correct key is the header field `productionordersheader.PrimaryWorkCentre_ARBID`
-> (matches `workcentres.WorkCentreObjectID_OBJID`). `06_production_twin.ipynb` now joins on the
+> (matches `workcentres.WorkCentreObjectID_OBJID`). `07_production_twin.ipynb` now joins on the
 > header field, so `primary_work_centre` / `is_bottleneck` populate and `ROUTED_THROUGH` edges exist.
 
 ### Step 6 — Events + alerts
-Convert KPI/twin abnormalities into one shared `supply_chain_events` table (not per-twin
-event tables). Route by function, severity, owner, status.
+Convert KPI/twin abnormalities into one shared `monitoring.events` table (not per-twin event
+tables). Route by function, severity, owner, status.
+
+**Thin events layer — DONE.** `notebooks/13_events.ipynb` → `monitoring.events`. Derives typed
+events from the five `*_twin_current` tables (STOCKOUT / LOW_COVER / OVERSTOCK, SUPPLIER_RISK /
+LOW_OTIF, BOTTLENECK / LOW_YIELD, FULFILLMENT_RISK / LOW_FILL, FORECAST_DRIFT) with a common
+14-column shape, deterministic `event_id` (`sha2(event_type|entity_id|plant|channel)`), default
+`owner`/`status='open'`, and an **empty `recommended_action`** the planning engine fills later.
+Rebuilt deterministically each run (idempotent overwrite); thresholds are config at the top.
+Mutable status/ownership workflow moves to Lakebase in Step 8. Surfaced as an **Events tab** in the
+Twin Explorer app (`apps/twin_explorer` — filter by function/severity/status; drill to the affected
+entity's twin rows via `backend.node_drilldown`).
+
+> **Threshold consolidation — DONE (Option 3).** All tunable parameters (detection thresholds +
+> inventory-policy defaults) live in one governed table, **`monitoring.planning_config`**, built by
+> `notebooks/03_planning_config.ipynb` (key–value with `scope_type`/`scope_value` overrides;
+> `MATERIAL` > `MATERIAL_GROUP` > `PLANT` > `GLOBAL`; effective GLOBAL values exposed via
+> `v_resolved_config`). Twins (`05`/`06`/`08`) and events (`13`) read their thresholds through a
+> `cfg(key, default)` helper (falls back to the built-in default). It is numbered **`03`** — before
+> the twins — so its parameters exist before any detection notebook consumes them; the `cfg(...)`
+> fallback remains only as a safety net. Data-derived params (lead time, demand stats) stay
+> in the twins and are **not** duplicated here. The planning engine reads its parameters
+> (`service_level`, `review_period_days`, MOQ, costs, ...) from the same table.
 
 ### Step 7 — Planning engines
 Inventory policy → MRP → finite production scheduling → distribution planning → scenarios.
 Heuristic/MRP-first; add targeted optimization (e.g. OR-Tools) on high-value trade-offs.
+
+**Inventory policy engine — DONE.** `notebooks/14_inventory_policy.ipynb` → `monitoring.inventory_policy`
+(per material × plant) + `recommended_action` written back onto open `INVENTORY` events (idempotent
+`MERGE`; run after `13`). v1 is a **distribution-free / split-conformal reorder point**:
+`S* = μ_X + SS`, where `μ_X` is the point forecast summed over the protection interval `P = L + R`
+(`L = ⌈avg_lead_time_days/7⌉` weeks from the procurement twin, `R = review_period_days` from
+`planning_config`) and `SS = max(0, Q̂_SL(e_P))` is the conformal quantile of the cumulative `P`-step
+forecast errors. Full method + assumptions: **`inventory_policy_model.html`**. This required
+**extending `02`** to emit `monitoring.demand_forecast_error_sets` (per-series cumulative error sets for
+horizons `h=1..H` from the rolling-origin backtest — the conformal calibration data; `14` selects `h=P`).
+**Scope = by demand independence** (reorder point is an independent-demand technique): it covers stocked
+items that have a **sales demand forecast**. Replenishment mode then follows sourcing — purchased sold
+items → `PO` (supplier lead time from the procurement twin); produced sold items → `PRODUCTION` (production
+lead time from the production twin; the order-up-to level is an **MPS signal** for the scheduler). Items
+with **dependent demand only** (components/intermediates consumed in production — packaging, dairy, bulk)
+are tagged `MRP_DEPENDENT` and get **no** reorder point — their demand is netted by the **MRP engine**
+(BOM explosion of the finished-goods plan, next). For an item with both independent and dependent demand
+(e.g. green beans sold *and* roasted), the engine covers only the independent (sales) portion; MRP adds
+the dependent portion. **Explicit assumptions** (documented in `inventory_policy_model.html`): primary
+supplier = largest PO volume (single-source); lead time = mean recorded actual rounded up to whole weeks
+(min 1), lead-time variability ignored; position = on-hand + on-order, backorders excluded; `μ_X` from the
+sales forecast only. `# TODO — EXTEND`: time-series conformal (EnbPI/ACI), lead-time variability,
+fill-rate targets, real-time feeds (`R→0`).
+
+**MRP / supply plan — DONE (time-phased, consistent with `14`).** `notebooks/15_mrp.ipynb` →
+`monitoring.mrp_plan` (weekly grain) + appends the 13-week schedule to open `INVENTORY` events. It **consumes the
+nb 14 policy** (`order_up_to_level` `S*` + `safety_stock`) and applies it **week by week** across the horizon:
+walk projected inventory forward using the **weekly** demand forecast; each week, if the projected balance drops
+below safety, plan a receipt — **make-to-stock finished** order up to `S*`, **make-to-order finished** (beverages,
+no stock/policy) lot-for-lot to demand, **components** lot-for-lot to safety; lead-time-offset the *release*
+(`t − L`, clamp to week 1 = `past_due`); **explode** each parent's weekly release through
+`monitoring.v_material_bom_edges` (planning BOM, nb 09 — not gold; low-level coded so shared components like green
+beans net once). **Consistency:** **week 1 of the MRP plan equals nb 14's "order now?" decision** (verified: both
+0 for the overstocked roasted-500g), and the 13-week sum is the horizon requirement — so `14` and `15` agree.
+**Key point:** the order-up-to stays lead-time-sized; the horizon is covered by *re-applying* the short policy per
+week, not by targeting 13 weeks of stock. v1 caveats: **infinite capacity** (finite scheduling next, blocked on a
+routing master); **open orders folded into week-1 on-hand** (no dated scheduled receipts in source); **UOM**
+normalized within a family (cross-family flagged `uom_mismatch` — e.g. milk ML vs stock L). **Known limitation:**
+mixed-demand items (green beans, sold *and* roasted) still share physical stock across `14` (independent) and `15`
+(dependent, lot-for-lot to nb 14 safety) — reconcile in **S&OP/IBP**. `# TODO — EXTEND`: dated scheduled receipts,
+capacity checks, pegging, lot-sizing policies.
 
 ### Step 8 — Plan-of-record + scenario store
 Use Lakebase (Postgres) for mutable plan/scenario/approval/agent-workflow state, mirrored to
@@ -197,7 +265,7 @@ guardrails below.
 | Plan / agent workflow state | Lakebase (Postgres) + Delta mirror | Mutable, transactional, app-driven |
 | Twin granularity | five separate twins | Business clarity, ownership, domain agent tools |
 | Relationship/network objects | views first, materialize later | Avoid premature complexity |
-| Events | one shared `supply_chain_events` | Single inbox for agents/alerts |
+| Events | one shared `events` | Single inbox for agents/alerts |
 | Refresh | scheduled near-real-time (e.g. 30 min) | Check freshness before acting |
 | Forecasting | pluggable Databricks-native model | No `ai_forecast`/AutoML; swappable |
 
@@ -241,4 +309,4 @@ Other twins may **consume** these values but must not redefine them.
 2. Keep the canonical twin output columns stable; change only how they are computed.
 3. Replace business logic at `# TODO — EXTEND for your business` markers (KPI formulas,
    event rules, planning policies, agent tools).
-4. Use the CoffCoff fill-ins (`mickmickstableaws_catalog.gold`) as a worked example.
+4. Use the CoffCoff fill-ins (`mickmickstableawscoff_catalog.gold`) as a worked example.

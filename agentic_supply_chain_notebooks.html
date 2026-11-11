@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Agentic Supply Chain — Notebook Reference (00–15)</title>
+<style>
+  :root {
+    --espresso:#2c1a10; --coffee:#3b2415; --mocha:#5a3a22; --latte:#c9a27e;
+    --cream:#f6f1ea; --paper:#fffdfa; --ink:#2b2118; --muted:#7c6b5b;
+    --gold:#b07d2b; --gold-bg:#f7ecd8; --mon:#2f5fa8; --mon-bg:#e8eef8;
+    --green:#2e7d52; --green-bg:#e6f4ec; --line:#e4d9cc; --shadow:0 6px 22px rgba(44,26,16,.10);
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:linear-gradient(160deg,#f1e8dd 0%,var(--cream) 40%);color:var(--ink);line-height:1.6;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:1080px;margin:0 auto;padding:40px 26px 90px;}
+  header.hero{background:radial-gradient(120% 140% at 0% 0%,var(--mocha) 0%,var(--coffee) 45%,var(--espresso) 100%);
+    color:#f7efe6;border-radius:22px;padding:36px 40px;box-shadow:var(--shadow);position:relative;overflow:hidden;}
+  header.hero::after{content:"\1F4D3";position:absolute;font-size:190px;right:-8px;top:-42px;opacity:.07;transform:rotate(-12deg);}
+  .kicker{text-transform:uppercase;letter-spacing:3px;font-size:12px;color:var(--latte);font-weight:700;margin:0 0 10px;}
+  header.hero h1{margin:0 0 10px;font-size:29px;line-height:1.2;}
+  header.hero p{margin:0;max-width:820px;color:#e7d9c8;font-size:15px;}
+  .legend{display:flex;gap:10px;flex-wrap:wrap;margin:22px 0 6px;}
+  .legend span{font-size:12.5px;font-weight:600;padding:4px 11px;border-radius:999px;border:1px solid var(--line);background:var(--paper);}
+  .legend .g{color:var(--gold);border-color:#e6c79a;background:var(--gold-bg);}
+  .legend .m{color:var(--mon);border-color:#b9caea;background:var(--mon-bg);}
+  .phase{margin:40px 0 6px;font-size:13px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--coffee);
+    display:flex;align-items:center;gap:12px;}
+  .phase::after{content:"";flex:1;height:1px;background:var(--line);}
+  .card{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:18px 22px;box-shadow:var(--shadow);margin:14px 0;}
+  .card h3{margin:0 0 4px;font-size:16.5px;color:var(--mocha);display:flex;align-items:center;gap:10px;}
+  .nbnum{background:var(--coffee);color:var(--cream);min-width:30px;height:26px;padding:0 7px;border-radius:7px;
+    display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex:none;}
+  .purpose{margin:6px 0 12px;font-size:14.5px;}
+  .io{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  @media(max-width:680px){.io{grid-template-columns:1fr;}}
+  .io .box{background:#fbf7f1;border:1px solid var(--line);border-radius:10px;padding:10px 13px;}
+  .io .lbl{font-size:10.5px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px;}
+  .io .box.out{border-left:4px solid var(--green);}
+  .io .box.in{border-left:4px solid var(--latte);}
+  .chip{display:inline-block;font-size:12px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+    padding:2px 8px;margin:2px 3px 2px 0;border-radius:6px;border:1px solid var(--line);background:#fff;}
+  .chip.g{color:var(--gold);background:var(--gold-bg);border-color:#e6c79a;}
+  .chip.m{color:var(--mon);background:var(--mon-bg);border-color:#b9caea;}
+  .chip.none{color:var(--muted);font-style:italic;font-family:inherit;}
+  .note{font-size:13px;color:var(--muted);margin-top:9px;}
+  .foot{color:var(--muted);font-size:13px;margin-top:44px;border-top:1px solid var(--line);padding-top:16px;}
+  code{background:#f0e7db;border-radius:5px;padding:1px 6px;font-size:13px;color:var(--coffee);}
+  .info{position:relative;display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;
+    border-radius:50%;background:var(--mocha);color:var(--cream);font-size:10px;font-weight:700;font-style:normal;
+    cursor:help;margin-left:3px;vertical-align:super;}
+  .info .tip{position:absolute;bottom:150%;left:50%;transform:translateX(-50%);width:340px;max-width:80vw;
+    background:var(--espresso);color:#f3e7d7;text-align:left;padding:12px 14px;border-radius:10px;font-size:12.5px;
+    font-weight:400;line-height:1.55;box-shadow:var(--shadow);opacity:0;visibility:hidden;transition:opacity .15s;z-index:20;}
+  .info .tip::after{content:"";position:absolute;top:100%;left:50%;transform:translateX(-50%);
+    border:6px solid transparent;border-top-color:var(--espresso);}
+  .info:hover .tip,.info:focus .tip{opacity:1;visibility:visible;}
+  .info .tip b{color:var(--latte);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <p class="kicker">CoffCoff · Agentic Supply Chain</p>
+  <h1>Notebook Reference — Purpose, Inputs &amp; Outputs (00–15)</h1>
+  <p>What each build notebook does and the data contract it reads and writes. Source facts stay in the
+  read-only <code>gold</code> layer (<code>gold_opus5</code>, snapshot to 2026-08-04); everything derived —
+  including the demand forecast in <code>monitoring.demandplan</code> — is written to the <code>monitoring</code> schema.
+  Reference workspace: <code>mickmickstableawscoff_catalog</code>.</p>
+</header>
+
+<div class="legend">
+  <span class="g">gold source (read-only)</span>
+  <span class="m">monitoring (derived)</span>
+  <span>Outputs are green-bordered · Inputs are latte-bordered</span>
+</div>
+
+<!-- PHASE 1 -->
+<div class="phase">Foundation &amp; profiling</div>
+
+<div class="card">
+  <h3><span class="nbnum">00</span> Setup monitoring schema</h3>
+  <p class="purpose">Foundation step. Creates the derived schema that every later stage writes to, so
+  <code>gold</code> stays read-only and all derived state is isolated.</p>
+  <div class="io">
+    <div class="box in"><span class="lbl">Inputs</span><span class="chip none">none — target catalog/schema config only</span></div>
+    <div class="box out"><span class="lbl">Outputs</span><span class="chip m">monitoring (schema)</span></div>
+  </div>
+</div>
+
+<div class="card">
+  <h3><span class="nbnum">01</span> Source mapping &amp; readiness assessment</h3>
+  <p class="purpose">Maps each source table to its canonical role and profiles readiness — existence, row
+  counts, date span, empties, freshness — so you see what is ready, what is empty, and what must be
+  synthesized before forecasting or building any twin. Displays a readiness report; writes nothing.</p>
+  <div class="io">
+    <div class="box in"><span class="lbl">Inputs</span>
+      <span class="chip g">gold.salesorders</span><span class="chip g">gold.demandplan</span>
+      <span class="chip g">gold.inventory*</span><span class="chip g">gold.vendorperformance</span>
+      <span class="chip g">gold.production*</span><span class="chip g">gold.goodsmovements</span>
+      <span class="chip g">gold.billofmaterials</span><span class="chip g">gold.workcentres</span>
+      <span class="chip g">gold.outbounddeliveries</span><span class="chip g">gold.billinginvoices</span>
+      <span class="chip g">gold.materialsmd / customersmd / producthierarchiesmd</span>
+      <span class="chip g">gold.routings / setupmatrix</span>
+      <span class="chip g">gold.shipments / transportrequirements / freightlanes / carriersmd / transportlocations</span>
+      <span class="chip none">+ missing role: distribution_network_master</span></div>
+    <div class="box out"><span class="lbl">Outputs</span><span class="chip none">inline readiness report (no table written)</span></div>
+  </div>
+</div>
+
+<!-- PHASE 2 -->
+<div class="phase">Demand forecast</div>
+
+<div class="card">
+  <h3><span class="nbnum">02</span> Generate demand forecast</h3>
+  <p class="purpose">Builds a forward demand forecast per material × plant × channel from sales history
+  (<code>statsforecast</code> AutoETS with a seasonal-naive fallback),
+  scores it with a rolling-origin backtest, and emits conformal calibration error-sets for the inventory policy.
+  The forecast is written to <code>monitoring.demandplan</code> so the source schema stays read-only
+  (<code>forecast_output_table</code> overrides it).</p>
+  <div class="io">
+    <div class="box in"><span class="lbl">Inputs</span><span class="chip g">gold.salesorders</span></div>
+    <div class="box out"><span class="lbl">Outputs</span>
+      <span class="chip m">demandplan</span>
+      <span class="chip m">demand_forecast_accuracy</span>
+      <span class="chip m">demand_forecast_error_sets</span></div>
+  </div>
+</div>
+
+<!-- PHASE 2b -->
+<div class="phase">Planning parameters</div>
+
+<div class="card">
+  <h3><span class="nbnum">03</span> Planning config</h3>
+  <p class="purpose">The single source of tunable parameters — detection thresholds + inventory-policy defaults —
+  as authored key–value rows with scope-based overrides (MATERIAL &gt; MATERIAL_GROUP &gt; PLANT &gt; GLOBAL).
+  Numbered before the twins so its parameters exist before any detection notebook reads them via <code>cfg()</code>.</p>
+  <div class="io">
+    <div class="box in"><span class="lbl">Inputs</span><span class="chip none">authored defaults (not sourced from gold)</span></div>
+    <div class="box out"><span class="lbl">Outputs</span>
+      <span class="chip m">planning_config</span><span class="chip m">v_resolved_config</span></div>
+  </div>
+</div>
+
+<!-- PHASE 3 -->
+<div class="phase">Digital twin state layer</div>
+
+<div class="card">
+  <h3><span class="nbnum">04</span> Demand twin</h3>
+  <p class="purpose">Materializes the Demand / Customer twin: firm &amp; open demand<span class="info" tabindex="0">i<span class="tip"><b>Firm demand</b> — actual booked customer sales orders (what customers have already ordered), as opposed to the statistical forecast.<br><br><b>Open demand</b> — firm orders not yet delivered whose requested delivery date is still ahead: the forward order book awaiting fulfilment.</span></span>, backlog<span class="info" tabindex="0">i<span class="tip"><b>Backlog</b> — firm orders now past their requested delivery date but still undelivered — overdue unfulfilled demand (ordered − delivered, past due). Driven by <b>order type</b>: only shipped orders (<code>ZOR</code> wholesale) are netted against deliveries; counter (<code>ZPOS</code>) and delivery (<code>ZDEL</code>) orders are fulfilled without a tracked delivery, so their open demand and backlog are 0. (Any residual backlog reflects genuinely-shipped lines whose delivery records are missing in the synthetic source.)</span></span>, forecast state<span class="info" tabindex="0">i<span class="tip"><b>Forecast state</b> — the current demand forecast the twin carries (from nb 02 / <code>monitoring.demandplan</code>): the forward predicted demand per period, with its prediction interval, used to project future requirements downstream.</span></span>,
+  actual-vs-forecast accuracy/bias, demand volatility, and customer/product context. Everything downstream
+  reads demand from here.</p>
+  <div class="io">
+    <div class="box in"><span class="lbl">Inputs</span>
+      <span class="chip g">gold.salesorders</span><span class="chip m">demandplan</span>
+      <span class="chip g">gold.outbounddeliveries</span><span class="chip g">gold.materialsmd</span>
+      <span class="chip g">gold.customersmd</span><span class="chip m">demand_forecast_accuracy</span></div>
+    <div class="box out"><span class="lbl">Outputs</span>
+      <span class="chip m">demand_twin_current</span><span class="chip m">demand_twin_metrics_timeseries</span></div>
+  </div>
+</div>
+
+<div class="card">
+  <h3><span class="nbnum">05</span> Inventory twin</h3>
+  <p class="purpose">Inventory / material-flow twin: on-hand<span class="info" tabindex="0">i<span class="tip"><b>On-hand</b> — the current physical stock available now (unrestricted-use quantity) at the material × plant, from the latest inventory snapshot.</span></span>, consumption velocity<span class="info" tabindex="0">i<span class="tip"><b>Consumption velocity</b> — the rate stock is being drawn down: the trailing daily consumption rate (units/day). It converts a stock level into a time buffer (days of cover).</span></span>, days-of-cover<span class="info" tabindex="0">i<span class="tip"><b>Days of cover</b> — how long current on-hand will last: on-hand ÷ daily rate. Reported as <i>actual</i> (trailing consumption) and <i>demand</i> (forecast). The risk flags use an <b>effective</b> cover = demand where a forecast exists, else trailing consumption — so dependent-only items (packaging, dairy) are still monitored, not just forecasted goods. Low = stockout risk; very high = overstock.</span></span>, stockout /
+  low-cover / overstock flags<span class="info" tabindex="0">i<span class="tip"><b>Risk flags</b> (thresholds from <code>planning_config</code>). <b>Stockout</b>: on-hand ≤ 0 — out of stock now. <b>Low cover</b> / <b>Overstock</b>: the <b>effective</b> days-of-cover (forecast demand where available, else trailing consumption) below the low-cover threshold (e.g. 14d) or above the overstock threshold (e.g. 90d) — so components without a forecast are still flagged. Items with neither a forecast nor a consumption rate can't be cover-flagged (handled by MRP).</span></span>, and projected balances<span class="info" tabindex="0">i<span class="tip"><b>Projected balances</b> — the forward stock trajectory given demand: e.g. the projected stockout date (when on-hand is expected to hit zero) and horizon coverage, so risk is visible before it happens, not only current state.</span></span>. The connective tissue that links demand to supply.</p>
+  <div class="io">
+    <div class="box in"><span class="lbl">Inputs</span>
+      <span class="chip g">gold.inventorysnapshots</span><span class="chip m">demand_twin_current</span>
+      <span class="chip m">planning_config</span></div>
+    <div class="box out"><span class="lbl">Outputs</span>
+      <span class="chip m">inventory_twin_current</span><span class="chip m">inventory_twin_metrics_timeseries</span></div>
+  </div>
+</div>
+
+<div class="card">
+  <h3><span class="nbnum">06</span> Procurement twin</h3>
+  <p class="purpose">Inbound supply twin: open/past-due POs<span class="info" tabindex="0">i<span class="tip"><b>Open POs</b> — purchase-order quantity not yet received (<code>open_po_qty</code> = ordered − received): inbound supply still on the way. <b>Past-due</b> — the share of open PO items whose expected delivery date has already passed (<code>past_due_rate</code>): overdue inbound.</span></span>, expected receipts<span class="info" tabindex="0">i<span class="tip"><b>Expected receipts</b> — quantity still to arrive on open POs (<code>expected_open_receipt_qty</code>) plus the <b>next expected receipt date</b> (<code>next_expected_receipt_date</code>): the forward inbound-supply pipeline.</span></span>, supplier OTIF / on-time /
+  in-full<span class="info" tabindex="0">i<span class="tip">Supplier reliability rates (0–1, computed line-level). <b>On-time</b> — delivered by the requested date. <b>In-full</b> — the full ordered quantity delivered. <b>OTIF</b> — on-time <i>and</i> in-full: the strict combined measure (a line counts only if it met both).</span></span>, lead time &amp; variability<span class="info" tabindex="0">i<span class="tip"><b>Lead time</b> — the average supplier order-to-receipt cycle time in days (<code>avg_lead_time_days</code>). <b>Variability</b> — its standard deviation (<code>lead_time_std_days</code>); higher = less predictable supply. These drive the replenishment lead time and safety stock downstream.</span></span>, rejection<span class="info" tabindex="0">i<span class="tip"><b>Rejection</b> — quantity rejected on receipt for quality, as a share of ordered qty (<code>rejection_rate</code> = rejected ÷ PO qty): a supplier quality signal.</span></span>, invoice accuracy<span class="info" tabindex="0">i<span class="tip"><b>Invoice accuracy</b> — share of supplier invoices that match the PO / receipt (<code>invoice_accuracy_rate</code>): billing / financial reliability.</span></span>, and supplier-risk flag<span class="info" tabindex="0">i<span class="tip"><b>Supplier-risk flag</b> — a boolean set TRUE when OTIF is below the risk threshold <i>or</i> rejection is above it (thresholds from <code>planning_config</code>, e.g. OTIF &lt; 0.80 or rejection &gt; 0.05). Marks suppliers to watch or act on.</span></span>.</p>
+  <div class="io">
+    <div class="box in"><span class="lbl">Inputs</span>
+      <span class="chip g">gold.vendorperformance</span><span class="chip m">planning_config</span></div>
+    <div class="box out"><span class="lbl">Outputs</span>
+      <span class="chip m">procurement_twin_current</span><span class="chip m">procurement_twin_metrics_timeseries</span></div>
+  </div>
+</div>
+
+<div class="card">
+  <h3><span class="nbnum">07</span> Production twin</h3>
+  <p class="purpose">Manufacturing twin: open production orders / WIP<span class="info" tabindex="0">i<span class="tip"><b>Open production orders / WIP</b> — orders not yet complete (<code>open_order_count</code>) and the work-in-progress quantity still to be produced (<code>open_production_qty</code>): what's currently on the shop floor, unfinished.</span></span>, planned-vs-actual<span class="info" tabindex="0">i<span class="tip"><b>Planned-vs-actual</b> — planned output (<code>planned_qty</code>) versus what was actually produced (<code>produced_qty</code>), plus cost variance (<code>avg_cost_variance_pct</code>): the production attainment / execution gap.</span></span>, yield &amp; scrap<span class="info" tabindex="0">i<span class="tip"><b>Yield &amp; scrap</b> — <code>yield_pct</code> = good output as a share of input; <code>scrap_pct</code> = share wasted; <code>first_pass_yield_pct</code> = right-first-time. Process-quality signals. (Item-level <i>unweighted</i> averages; a quantity-weighted variant is an extension.)</span></span>,
+  schedule adherence<span class="info" tabindex="0">i<span class="tip"><b>Schedule adherence</b> — share of orders that met their planned schedule (<code>schedule_adherence_rate</code>), with <code>on_time_start_rate</code> for on-time starts: how closely execution follows the plan.</span></span>, recorded lead time<span class="info" tabindex="0">i<span class="tip"><b>Recorded lead time</b> — the actual observed order start-to-finish time (<code>avg_actual_lead_time_hours</code>) and its variability (<code>avg_lead_time_variance_hours</code>). These are <b>recorded actuals</b> from the order header — not a capacity / scheduling model.</span></span>, primary work centre<span class="info" tabindex="0">i<span class="tip"><b>Primary work centre</b> — the work centre the material's production routes through (e.g. ROASTER, PACKING), now taken from the <code>routings</code> master (<code>routed_work_centre</code>), falling back to the order header when no routing exists.</span></span>, routed work content &amp; work backlog<span class="info" tabindex="0">i<span class="tip"><b>Routed work content &amp; work backlog</b> — <code>routed_work_minutes_per_unit</code> (standard minutes per unit from the routing) × open quantity = <code>open_work_content_minutes</code>. Divided by the work centre's <code>work_centre_daily_capacity_min</code> this gives <code>work_backlog_days</code> = days to clear open work at full capacity. Magnitude is inflated by synthetic open quantities, but relative values identify the capacity pressure point (the roaster).</span></span>, and bottleneck flag<span class="info" tabindex="0">i<span class="tip"><b>Bottleneck flag</b> — <code>is_bottleneck</code> = the OR of <code>workcentres.IsBottleneckFlag</code> across the material's work centres (a master-data designation). Kept as the reliable signal; the routing-based <code>work_backlog_days</code> above is exposed alongside it as an informational capacity-pressure metric.</span></span>.</p>
+  <div class="io">
+    <div class="box in"><span class="lbl">Inputs</span>
+      <span class="chip g">gold.productionorders</span><span class="chip g">gold.productionordersheader</span>
+      <span class="chip g">gold.workcentres</span><span class="chip g">gold.routings</span></div>
+    <div class="box out"><span class="lbl">Outputs</span>
+      <span class="chip m">production_twin_current</span><span class="chip m">production_twin_metrics_timeseries</span></div>
+  </div>
+</div>
+
+<div class="card">
+  <h3><span class="nbnum">08</span> Distribution twin</h3>
+  <p class="purpose">Outbound fulfillment twin: deliveries<span class="info" tabindex="0">i<span class="tip"><b>Deliveries</b> — outbound delivery lines in the window (<code>delivery_line_count</code>) with ordered vs delivered quantity (<code>ordered_qty</code> / <code>delivered_qty</code>) and the open shipment book (<code>open_delivery_qty</code> = ordered − delivered on lines not yet goods-issued).</span></span>, fill rate<span class="info" tabindex="0">i<span class="tip"><b>Fill rate</b> — delivered ÷ ordered quantity (<code>fill_rate</code>): the <b>quantity-weighted</b> share of demand actually fulfilled.</span></span>, on-time / in-full / OTIF<span class="info" tabindex="0">i<span class="tip">Service-reliability rates (line-level). <b>On-time</b> — delivered by the due date. <b>In-full</b> — the full ordered quantity delivered. <b>OTIF</b> — on-time <i>and</i> in-full: the strict combined measure (a NULL on-time counts as not on-time, so OTIF reads slightly stricter than on-time alone).</span></span>, transit
+  transit<span class="info" tabindex="0">i<span class="tip"><b>Planned vs actual transit</b> — <code>avg_planned_transit_days</code> from transport requirements against <code>avg_actual_transit_days</code> derived from the assigned <code>shipments</code> (real ship-to-arrive time), replacing the old derived estimate.</span></span>, window feasibility &amp; service lateness<span class="info" tabindex="0">i<span class="tip"><b>Window feasibility &amp; service lateness</b> — <code>window_feasible_rate</code> = share of delivery lines whose requested ship window is achievable; <code>avg_service_lateness_days</code> = average lateness vs that window. From <code>transportrequirements</code> (1:1 with delivery lines).</span></span>, freight cost<span class="info" tabindex="0">i<span class="tip"><b>Freight cost</b> — <code>freight_cost</code> = total delivery freight cost over the window (from transport requirements): the cost side of fulfilment, now available per material × plant × channel.</span></span>, fulfillment-risk flag<span class="info" tabindex="0">i<span class="tip"><b>Fulfillment-risk flag</b> — a boolean set TRUE when <code>otif_rate</code> is below the risk threshold (from <code>planning_config</code>). Marks series at risk of missing delivery commitments.</span></span>, and transport-risk flag<span class="info" tabindex="0">i<span class="tip"><b>Transport-risk flag</b> — <code>transport_risk_flag</code> = TRUE when any requested ship window is infeasible (<code>window_feasible_rate</code> &lt; 1): flags lanes/series where the promised delivery window can't be met by transport.</span></span>.</p>
+  <div class="io">
+    <div class="box in"><span class="lbl">Inputs</span>
+      <span class="chip g">gold.outbounddeliveries</span><span class="chip g">gold.transportrequirements</span><span class="chip g">gold.shipments</span><span class="chip m">planning_config</span></div>
+    <div class="box out"><span class="lbl">Outputs</span>
+      <span class="chip m">distribution_twin_current</span><span class="chip m">distribution_twin_metrics_timeseries</span></div>
+  </div>
+</div>
+
+<!-- PHASE 4 -->
+<div class="phase">Relationship layer</div>
+
+<div class="card">
+  <h3><span class="nbnum">09</span> Relationship layer</h3>
+  <p class="purpose">Turns the five twins into one typed graph (nodes + edges) for the network view, and adds a
+  planning-grade bill-of-materials view that the MRP engine reads instead of gold. Views over gold + twins
+  (live, no copy).</p>
+  <div class="io">
+    <div class="box in"><span class="lbl">Inputs</span>
+      <span class="chip g">gold.materialsmd</span><span class="chip g">gold.workcentres</span>
+      <span class="chip g">gold.billofmaterials</span><span class="chip m">the five *_twin_current</span></div>
+    <div class="box out"><span class="lbl">Outputs (views)</span>
+      <span class="chip m">v_network_nodes</span><span class="chip m">v_network_edges</span>
+      <span class="chip m">v_material_bom_edges</span></div>
+  </div>
+</div>
+
+<!-- PHASE 5 -->
+<div class="phase">Control tower (monitor)</div>
+
+<div class="card">
+  <h3><span class="nbnum">10</span> KPI metric views</h3>
+  <p class="purpose">The KPI semantic layer: one governed Unity Catalog metric view per twin (dimensions +
+  <code>MEASURE()</code> KPIs), so the dashboard, Genie, SQL, and the agent all compute the same numbers.</p>
+  <div class="io">
+    <div class="box in"><span class="lbl">Inputs</span><span class="chip m">the five *_twin_current</span></div>
+    <div class="box out"><span class="lbl">Outputs (metric views)</span>
+      <span class="chip m">demand_metrics</span><span class="chip m">inventory_metrics</span>
+      <span class="chip m">procurement_metrics</span><span class="chip m">production_metrics</span>
+      <span class="chip m">distribution_metrics</span></div>
+  </div>
+</div>
+
+<div class="card">
+  <h3><span class="nbnum">11</span> Control tower dashboard</h3>
+  <p class="purpose">Deploys the AI/BI (Lakeview) <em>Supply Chain Control Tower</em> dashboard — cross-twin KPI
+  counters, per-domain charts, and detail tables — via the SDK, then publishes it.</p>
+  <div class="io">
+    <div class="box in"><span class="lbl">Inputs</span>
+      <span class="chip m">metric views / twin tables</span><span class="chip none">(via SQL warehouse)</span></div>
+    <div class="box out"><span class="lbl">Outputs</span><span class="chip none">published Lakeview dashboard</span></div>
+  </div>
+</div>
+
+<div class="card">
+  <h3><span class="nbnum">12</span> Genie space</h3>
+  <p class="purpose">Creates the <em>Supply Chain Digital Twins</em> Genie space for natural-language Q&amp;A over
+  the twin tables, with tailored instructions (grain per twin, metric conventions, data caveats).</p>
+  <div class="io">
+    <div class="box in"><span class="lbl">Inputs</span>
+      <span class="chip m">the 10 twin tables (*_twin_current + *_twin_metrics_timeseries)</span></div>
+    <div class="box out"><span class="lbl">Outputs</span><span class="chip none">Genie space</span></div>
+  </div>
+</div>
+
+<!-- PHASE 6 -->
+<div class="phase">Events</div>
+
+<div class="card">
+  <h3><span class="nbnum">13</span> Events</h3>
+  <p class="purpose">Thin cross-twin detection layer: derives typed abnormalities (stockout, low cover,
+  overstock, supplier risk, low OTIF, bottleneck, low yield, fulfillment risk, low fill, forecast drift) from
+  the five current twins into one governed <code>events</code> table with a deterministic id. Rebuilt each run.</p>
+  <div class="io">
+    <div class="box in"><span class="lbl">Inputs</span>
+      <span class="chip m">the five *_twin_current</span><span class="chip m">planning_config</span></div>
+    <div class="box out"><span class="lbl">Outputs</span><span class="chip m">events</span></div>
+  </div>
+</div>
+
+<!-- PHASE 7 -->
+<div class="phase">Planning engines</div>
+
+<div class="card">
+  <h3><span class="nbnum">14</span> Inventory policy</h3>
+  <p class="purpose">Inventory optimization for independent-demand items<span class="info" tabindex="0">i<span class="tip"><b>Independent-demand items</b> — items whose demand comes directly from <b>customers</b> (sales orders / forecast), not from producing something else — e.g. finished goods sold as-is and purchased goods sold over the counter. Their demand is forecast statistically, so they get a reorder point / order-up-to target here. Contrast <b>dependent demand</b>, which is <i>derived</i> from a parent item's production via the BOM (e.g. packaging, raw beans) — those are sized by MRP (nb 15), not here.</span></span>: a distribution-free
+  <strong>split-conformal reorder point / order-up-to</strong> (<code>S* = μ + safety</code>), scoped by demand
+  independence — purchased sold items → PO, produced sold items → PRODUCTION target, dependent-only items flagged
+  for MRP. Writes recommendations onto open inventory events.</p>
+  <div class="io">
+    <div class="box in"><span class="lbl">Inputs</span>
+      <span class="chip m">inventory_twin_current</span><span class="chip m">procurement_twin_current</span>
+      <span class="chip m">production_twin_current</span><span class="chip m">demand_twin_metrics_timeseries</span>
+      <span class="chip m">demand_forecast_error_sets</span><span class="chip m">planning_config</span></div>
+    <div class="box out"><span class="lbl">Outputs</span>
+      <span class="chip m">inventory_policy</span><span class="chip m">events (recommended_action)</span></div>
+  </div>
+</div>
+
+<div class="card">
+  <h3><span class="nbnum">15</span> MRP / supply plan</h3>
+  <p class="purpose"><strong>Time-phased weekly MRP</strong> over a 13-week horizon: consumes nb 14's order-up-to
+  policy and applies it week by week (week 1 = nb 14's decision), then explodes the resulting planned production
+  through the BOM into dependent, lead-time-offset planned orders (PURCHASE / PRODUCTION).</p>
+  <div class="io">
+    <div class="box in"><span class="lbl">Inputs</span>
+      <span class="chip m">v_material_bom_edges</span><span class="chip m">demand_twin_metrics_timeseries</span>
+      <span class="chip m">inventory_twin_current</span><span class="chip m">procurement_twin_current</span>
+      <span class="chip m">production_twin_current</span><span class="chip m">inventory_policy</span>
+      <span class="chip m">planning_config</span></div>
+    <div class="box out"><span class="lbl">Outputs</span>
+      <span class="chip m">mrp_plan (weekly grain)</span><span class="chip m">events (recommended_action)</span></div>
+  </div>
+</div>
+
+<p class="note">All <code>monitoring.*</code> tables/views are rebuilt deterministically (idempotent overwrite)
+each run. Pipeline order matters where noted: <code>02 → 03</code> (forecast before demand twin),
+<code>03 → 04</code> (demand twin feeds inventory days-of-cover), twins <code>→ 08/09/12</code>, and
+<code>12 → 14 → 15</code> (events are detected, then the planning engines fill their recommendations;
+re-running 12 resets them).</p>
+
+<div class="foot">
+  CoffCoff Agentic Supply Chain · notebook data contracts (00–15) · source <code>mickmickstableawscoff_catalog.gold_opus5</code> · derived <code>mickmickstableawscoff_catalog.monitoring</code>
+</div>
+
+</div>
+</body>
+</html>

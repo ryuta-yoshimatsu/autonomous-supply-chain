@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Inventory Policy Engine — Modeling Details &amp; Assumptions</title>
+<script>
+  MathJax = { tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']] },
+              svg: { fontCache: 'global' } };
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+<style>
+  :root {
+    --espresso: #2c1a10; --coffee: #3b2415; --mocha: #5a3a22; --latte: #c9a27e;
+    --cream: #f6f1ea; --paper: #fffdfa; --ink: #2b2118; --muted: #7c6b5b;
+    --green: #2e7d52; --green-bg: #e6f4ec; --amber: #c9791b; --amber-bg: #fbeedd;
+    --red: #c0392b; --red-bg: #fbe7e4; --blue: #2f5fa8; --blue-bg: #e8eef8;
+    --line: #e4d9cc; --shadow: 0 6px 22px rgba(44, 26, 16, 0.10);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: linear-gradient(160deg, #f1e8dd 0%, var(--cream) 40%); color: var(--ink);
+    line-height: 1.6; -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 40px 28px 90px; }
+  header.hero {
+    background: radial-gradient(120% 140% at 0% 0%, var(--mocha) 0%, var(--coffee) 45%, var(--espresso) 100%);
+    color: #f7efe6; border-radius: 22px; padding: 38px 40px; box-shadow: var(--shadow);
+    position: relative; overflow: hidden;
+  }
+  header.hero::after { content: "\1F4E6"; position: absolute; font-size: 190px; right: -10px; top: -40px; opacity: 0.07; transform: rotate(-12deg); }
+  .kicker { text-transform: uppercase; letter-spacing: 3px; font-size: 12px; color: var(--latte); font-weight: 700; margin: 0 0 10px; }
+  header.hero h1 { margin: 0 0 10px; font-size: 30px; line-height: 1.2; }
+  header.hero p { margin: 0; max-width: 780px; color: #e7d9c8; font-size: 15.5px; }
+  .section-title { font-size: 21px; margin: 52px 0 6px; color: var(--coffee); display: flex; align-items: center; gap: 10px; }
+  .section-title .num { background: var(--coffee); color: var(--cream); width: 28px; height: 28px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; flex: none; }
+  .section-sub { color: var(--muted); margin: 0 0 20px; font-size: 14.5px; }
+  h3 { color: var(--mocha); margin: 26px 0 6px; font-size: 16.5px; }
+  p, li { font-size: 15px; }
+  .card { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 20px 24px; box-shadow: var(--shadow); margin: 16px 0; }
+  .eq { background: #fbf7f1; border: 1px solid var(--line); border-left: 4px solid var(--latte); border-radius: 10px; padding: 4px 18px; margin: 14px 0; overflow-x: auto; }
+  code { background: #f0e7db; border-radius: 5px; padding: 1px 6px; font-size: 13.5px; color: var(--coffee); }
+  table { border-collapse: collapse; width: 100%; margin: 14px 0; font-size: 14px; background: var(--paper); border-radius: 10px; overflow: hidden; box-shadow: var(--shadow); }
+  th, td { text-align: left; padding: 9px 13px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { background: var(--coffee); color: var(--cream); font-weight: 600; }
+  tr:last-child td { border-bottom: none; }
+  .callout { border-radius: 12px; padding: 14px 18px; margin: 16px 0; border: 1px solid; font-size: 14.5px; }
+  .callout.assume { background: var(--amber-bg); border-color: #e6c79a; }
+  .callout.fix { background: var(--green-bg); border-color: #b6ddc4; }
+  .callout.note { background: var(--blue-bg); border-color: #b9caea; }
+  .callout .lbl { font-weight: 700; text-transform: uppercase; letter-spacing: 1px; font-size: 11.5px; display: block; margin-bottom: 4px; }
+  .callout.assume .lbl { color: var(--amber); }
+  .callout.fix .lbl { color: var(--green); }
+  .callout.note .lbl { color: var(--blue); }
+  .pill { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 999px; background: var(--latte); color: var(--espresso); letter-spacing: 0.5px; }
+  ul.tight { margin: 6px 0; } ul.tight li { margin: 3px 0; }
+  .foot { color: var(--muted); font-size: 13px; margin-top: 40px; border-top: 1px solid var(--line); padding-top: 16px; }
+  a { color: var(--mocha); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <p class="kicker">Agentic Supply Chain · Planning Engine</p>
+  <h1>Inventory Policy Engine — Modeling Details &amp; Assumptions</h1>
+  <p>The rationale behind the reorder-point / safety-stock model in <code>14_inventory_policy.ipynb</code>.
+  <strong>Version 1 uses a conformal approach</strong>: a point forecast plus the empirical distribution of
+  rolling-origin backtest errors. This documents the method,
+  every assumption it rests on, why it is closed-form (no LP/MILP), and the upgrade path.</p>
+</header>
+
+<div class="section-title"><span class="num">1</span> Scope &amp; where it sits</div>
+<p class="section-sub">Step 7 (planning engines), first component. Consumes the twins + forecast backtest + <code>planning_config</code>; produces recommendations.</p>
+<div class="card">
+<p>The engine turns detected inventory abnormalities into <em>quantified replenishment recommendations</em>. For each
+in-scope material&nbsp;&times;&nbsp;plant it computes an order-up-to policy (reorder point / order-up-to level, safety
+stock, suggested order quantity) and writes <code>recommended_action</code> onto the open inventory events. It reads:</p>
+<ul class="tight">
+  <li><strong>Point forecast</strong> and its <strong>rolling-origin backtest errors</strong> — from the demand forecast (<code>02</code>).</li>
+  <li><strong>Lead time</strong> — from the <strong>procurement twin</strong> (purchased items) or the <strong>production twin</strong> (produced items).</li>
+  <li><strong>Inventory position</strong> (on-hand + on-order) — on-order = open POs (purchased) or open production/WIP (produced), from the <strong>inventory</strong>, <strong>procurement</strong> &amp; <strong>production</strong> twins.</li>
+  <li><strong>Policy parameters</strong> (service level, MOQ, ...) — from <code>monitoring.planning_config</code>.</li>
+</ul>
+</div>
+
+<div class="callout note" style="border-left-width:5px;">
+<span class="lbl">Scope — by demand independence (not purchased-vs-made)</span>
+<p style="margin:6px 0;">A reorder point / order-up-to is an <strong>independent-demand</strong> technique, so the engine covers stocked items
+that have a <strong>sales demand forecast</strong>. How the target is <em>replenished</em> then depends on sourcing:</p>
+<ul class="tight">
+  <li><strong>Independent + purchased</strong> (e.g. green beans sold bulk) → <code>replenishment_mode = PO</code>, supplier lead time.</li>
+  <li><strong>Independent + produced</strong> (e.g. roasted 500g finished goods) → <code>replenishment_mode = PRODUCTION</code>; the order-up-to level is a <strong>master-production-schedule (MPS) signal</strong> handed to MRP / finite scheduling, production lead time.</li>
+  <li><strong>Dependent demand only</strong> (components/intermediates consumed in production — packaging, dairy, roasted bulk) → <code>MRP_DEPENDENT</code>: <strong>no reorder point</strong>. Their demand is derived by <strong>MRP</strong> (BOM explosion of the finished-goods plan), not forecast statistically.</li>
+</ul>
+<p style="margin:6px 0;">For an item with <strong>both</strong> independent and dependent demand (green beans are sold <em>and</em> roasted),
+this engine covers only the <strong>independent (sales)</strong> portion; MRP adds the dependent portion.</p>
+</div>
+
+<div class="callout assume" style="border-left-width:5px;">
+<span class="lbl">Key modeling assumptions (made explicit)</span>
+<ul class="tight">
+  <li><strong>Primary supplier = largest PO volume.</strong> For purchased items, lead time and the supplier named in the PO
+  recommendation come from the <em>single</em> highest-volume supplier per material&nbsp;×&nbsp;plant — ignores dual-sourcing,
+  supplier splits, and cheaper/faster alternates.</li>
+  <li><strong>Lead time = mean recorded actual, rounded up to whole weeks (min 1).</strong> <code>L = max(1, ⌈lead_days/7⌉)</code>
+  from <code>avg_lead_time_days</code> (procurement) or <code>avg_actual_lead_time_hours</code> (production). <strong>Lead-time variability is ignored</strong> (the available std is not used) — see §8.</li>
+  <li><strong>Inventory position = on-hand + on-order</strong>; <strong>backorders excluded</strong> (§3.6).</li>
+  <li><strong><code>μ_X</code> from the sales forecast only</strong> — for items with mixed demand it omits dependent consumption (added by MRP).</li>
+  <li><strong>Cycle service level</strong> target (not fill rate); <strong>EOQ</strong> informational, computed only where a unit cost exists.</li>
+</ul>
+</div>
+
+<div class="callout fix" style="border-left-width:5px;">
+<span class="lbl">Version 1 — conformal reorder point (point forecast + empirical residual quantile)</span>
+<p style="margin:6px 0;">The reorder point is the <strong>service-level quantile of lead-time demand</strong>, obtained
+<strong>distribution-free</strong>: take the point forecast over the window and add the empirical quantile of the
+<strong>cumulative \(P\)-step forecast errors</strong> observed in a rolling-origin backtest.</p>
+<div class="eq">\[ SS=\max\!\big(0,\ \hat Q_{\text{SL}}(e_P)\big),\qquad S^\star=\mu_X+SS,\qquad Q_{\text{sugg}}=\max\!\big(0,\ S^\star-\text{position}\big) \]</div>
+<p style="margin:6px 0;">where \(e_P=\big(\sum_{P}\text{actual}\big)-\big(\sum_{P}\text{forecast}\big)\) are the aggregate errors from
+each backtest origin, and \(\hat Q_{\text{SL}}\) is their <strong>split-conformal quantile</strong> — the
+\(\lceil (n{+}1)\,\text{SL}\rceil\)-th smallest of the \(n\) errors (§3.4). The buffer is floored at 0: a negative
+quantile (systematic over-forecasting) never pushes \(S^\star\) below \(\mu_X\).</p>
+<p style="margin:6px 0;"><strong>Sources:</strong> \(\mu_X\) = the per-period forecast summed over the window (\(\sum_{t\le P}\hat d_t\), from the forecast time-series);
+\(e_P\) sets from an extended <code>02</code> rolling-origin backtest (emitted for all horizons \(1\ldots H\); <code>14</code> picks \(h=P\) per series);
+\(P=L+R\) with \(L=\max(1,\lceil\)<code>avg_lead_time_days</code>\(/7\rceil)\) weeks and \(R\) = the twin refresh cadence (§2);
+position \(=\)<code>on_hand_qty</code>+on-order (open POs for purchased, open production/WIP for produced; backorders deliberately excluded, §3.6); \(\text{SL}=\)<code>service_level</code>; round to
+<code>order_multiple</code>; MOQ applies only when an order is actually triggered.</p>
+<p style="margin:6px 0;"><strong>Why this as v1:</strong> needs <strong>only point forecasts</strong> (no probabilistic model),
+is model-agnostic, and is correct for skewed demand (a quantile, not \(\mu\pm z\sigma\)). <strong>Deferred</strong>
+(§8): lead-time variability, time-series conformal (EnbPI/ACI), heteroscedastic/relative residuals, generative modelling for
+intermittent SKUs, real-time feeds (\(R\to0\)), EOQ, fill-rate targets.</p>
+</div>
+
+<div class="section-title"><span class="num">2</span> Policy choice: the review period tracks data freshness</div>
+<p class="section-sub">One model, parameterized by \(R\). Today \(R\) = the twin refresh cadence; as the feeds go real-time, \(R\to0\).</p>
+<div class="card">
+<p>A stockout can only occur during the <strong>protection interval</strong> \(P\): the window between deciding to
+replenish and the replenishment being on the shelf.</p>
+<ul class="tight">
+  <li><strong>Continuous review</strong> <span class="pill">target state</span> — the position is watched live and an order fires the instant it crosses the reorder point; exposure is only the lead time, \(P=L\).</li>
+  <li><strong>Periodic review</strong> <span class="pill">v1 effective mode</span> — the position is only observed every \(R\) days; exposure is \(P=L+R\) (more buffer).</li>
+</ul>
+<p>The twins are currently fed in <strong>batch / micro-batch</strong>, so even though the agent reacts to events, the
+<em>effective</em> review period is the refresh cadence: v1 sets \(R=\)<code>review_period_days</code> = the twin refresh
+interval. Claiming \(P=L\) on batch-fed twins would overstate the achieved service level. The conformal residuals are
+simply measured at the corresponding horizon \(P=L+R\).</p>
+<div class="callout note"><span class="lbl">Roadmap: real-time feeds shrink the buffer</span>
+The pipelines are planned to move from micro-batch to <strong>real-time</strong>, so the twins always carry the freshest
+state. Nothing in the model changes — as the refresh cadence tightens, \(R\to0\), \(P\to L\), residuals are measured at a
+shorter horizon, and safety stock falls. The streaming upgrade is therefore a <em>quantifiable service-level /
+working-capital improvement</em>, not just plumbing.</div>
+</div>
+
+<div class="section-title"><span class="num">3</span> The model</div>
+<p class="section-sub">Reorder to the service-level quantile of lead-time demand; get that quantile from backtest residuals.</p>
+
+<h3>3.1 &nbsp;The target — reorder point = lead-time-demand quantile</h3>
+<div class="card">
+<p>Base-stock / newsvendor theory: the optimal order-up-to level is the <strong>critical-fractile quantile</strong> of the
+lead-time-demand (LTD) distribution \(F_{LTD}\):</p>
+<div class="eq">\[ S^\star=F_{LTD}^{-1}(\text{SL})\quad(\text{cycle service}),\qquad S^\star=F_{LTD}^{-1}\!\Big(\tfrac{C_u}{C_u+C_o}\Big)\ (\text{cost-based}). \]</div>
+<p>Derivation (cost form): expected cost \(C(S)=C_o\,E[(S-X)^+]+C_u\,E[(X-S)^+]\); setting \(C'(S)=0\) gives
+\(F_X(S^\star)=\tfrac{C_u}{C_u+C_o}\). For a <strong>cycle service level</strong> SL, no-stockout means \(X\le S\), so
+\(F_X(S^\star)=\text{SL}\) by definition — the same equation with the target named directly. So the whole task is
+<strong>estimating \(F_{LTD}\)'s quantile</strong>; v1 does that with a conformal residual estimate.</p>
+</div>
+
+<h3>3.2 &nbsp;Protection interval \(P\)</h3>
+<div class="card">
+<div class="eq">\[ P=L+R,\qquad L=\max\!\Big(1,\ \big\lceil \texttt{avg\_lead\_time\_days}/7 \big\rceil\Big)\ \text{weeks} \]</div>
+<p>\(R\) = review period = the twin refresh cadence (§2; real-time feeds \(\Rightarrow R\to0\Rightarrow P\to L\)).
+The \(\max(1,\lceil\cdot\rceil)\) guard matters: plain rounding sends lead times under ~3.5 days to \(P=0\), which
+silently degenerates the policy (\(\mu_X=0\), empty error window) for the fastest suppliers. \(L\) is fixed;
+lead-time variability is a documented upgrade (§8).</p>
+</div>
+
+<h3>3.3 &nbsp;The centre — expected demand over \(P\)</h3>
+<div class="card">
+<div class="eq">\[ \mu_X=\sum_{t=\text{now}}^{\text{now}+P}\hat d_t \]</div>
+<p>The <strong>per-period forecast summed over the window</strong> — the forecast time-series over the first \(P\)
+periods (<code>demand_twin_metrics_timeseries</code> / <code>gold.demandplan</code>). This is readily available and
+captures within-window trend/seasonality; a flat weekly rate \(\times P\) would be the cruder alternative.</p>
+</div>
+
+<h3>3.4 &nbsp;The buffer — conformal empirical quantile of backtest errors <span class="pill">v1 method</span></h3>
+<div class="card">
+<p>Rather than assume a distribution for demand, measure how wrong the forecast has been over the window, empirically.
+In the rolling-origin backtest, at each origin form the <strong>cumulative \(P\)-step</strong> forecast and actual and
+record the aggregate error \(e_P=\sum_P\text{actual}-\sum_P\text{forecast}\). The buffer is the conformal quantile of
+those errors, and the reorder point adds it to the forecast:</p>
+<div class="eq">\[ \hat Q_{\text{SL}}=e_{(\lceil (n+1)\,\text{SL}\rceil)},\qquad SS=\max\!\big(0,\ \hat Q_{\text{SL}}\big),\qquad S^\star=\mu_X+SS \]</div>
+<p>with \(e_{(1)}\le\cdots\le e_{(n)}\) the sorted errors. Two deliberate refinements over a plain percentile:</p>
+<ul class="tight">
+  <li><strong>Finite-sample conformal quantile.</strong> The plain empirical percentile systematically underestimates the
+  true tail when \(n\) is small — you have likely never observed the real extreme. Split conformal corrects this by taking
+  the \(\lceil (n{+}1)\,\text{SL}\rceil\)-th order statistic, i.e. treating the next error as an unseen \((n{+}1)\)-th point.
+  At \(n=100\), SL 95% that is the 96th vs ~95th value (negligible); at \(n=30\) it is the sample maximum. If
+  \(\lceil (n{+}1)\,\text{SL}\rceil>n\), there are too few origins for that SL (needs \(n\ge\text{SL}/(1-\text{SL})\):
+  19 for 95%, 99 for 99%) — v1 takes the max and sets an <code>insufficient_calibration</code> flag (fallback: pooled
+  relative residuals, §7).</li>
+  <li><strong>Floor at zero.</strong> A negative quantile (systematic over-forecasting) is statistically a legitimate bias
+  correction, but a "negative safety stock" destroys planner trust — v1 floors \(SS\) at 0 (conservative; only raises
+  achieved coverage).</li>
+</ul>
+<p><strong>Worked mini-example.</strong> Weekly actuals <code>[10,12,9,11,14,8,13,10,12,15,9,11]</code>, forecast = 11/wk,
+\(P=3\). Rolling 3-week aggregate errors (actual sum − 33): <code>[-2,-1,1,0,2,-2,2,4,3,2]</code>, so \(n=10\).
+At SL 95%, \(\lceil 11\times0.95\rceil=11>10\): too few origins, so take the max — \(SS=4\), \(S^\star=33+4=37\) — and flag
+<code>insufficient_calibration</code> (95% needs \(n\ge19\)). No \(\sigma\), no \(z\), no Normal assumption — just an
+order statistic.</p>
+<div class="callout fix"><span class="lbl">Why measure at the aggregate horizon</span>
+Measuring the <em>cumulative</em> \(P\)-step error (not per-period errors scaled by \(\sqrt P\)) <strong>bakes in
+autocorrelation automatically</strong> and needs no independence assumption. It also absorbs the fact that these are
+forecast errors (what we care about), not raw demand variation. Empirical quantiles handle <strong>skew</strong> for free.</div>
+<div class="callout note"><span class="lbl">This is conformal prediction</span>
+Mechanically this is <strong>split (inductive) conformal prediction</strong> with the backtest as the calibration set:
+the aggregate residuals are conformity scores, and \(\hat Q_{\text{SL}}\) (the \(\lceil (n{+}1)\text{SL}\rceil\)-th order statistic) is a one-sided conformal bound. <strong>Only point
+forecasts are required</strong> — the "probabilistic" part lives in the residual distribution, estimated empirically
+(or fit parametrically). Time-series data violate exchangeability, so strict coverage guarantees need a time-series
+conformal variant (EnbPI, ACI) — an §8 upgrade.</div>
+</div>
+
+<h3>3.5 &nbsp;The Normal special case (for reference)</h3>
+<div class="card">
+<p>If the aggregate residuals are roughly symmetric/Normal, the empirical quantile reduces to the familiar closed form
+with \(\sigma_X=\operatorname{std}(\{e_P\})\):</p>
+<div class="eq">\[ S^\star=\mu_X+z_{\text{SL}}\,\sigma_X,\qquad z_{\text{SL}}=\Phi^{-1}(\text{SL}),\qquad SS=z_{\text{SL}}\,\sigma_X. \]</div>
+<p>This is only the symmetric special case of §3.4; v1 uses the empirical quantile so it stays correct for skewed demand.
+(The cruder textbook form estimates \(\sigma_X=\sqrt{(L+R)\sigma_d^2+\mu_d^2\sigma_L^2}\) from historical demand +
+lead-time variability; we prefer the measured backtest residuals.)</p>
+</div>
+
+<h3>3.6 &nbsp;Suggested order quantity</h3>
+<div class="card">
+<div class="eq">\[ Q_{\text{raw}}=S^\star-\text{position};\qquad
+Q_{\text{sugg}}=\begin{cases}0, & Q_{\text{raw}}\le 0\\[2pt] \max\!\big(\operatorname{round}_{\texttt{order\_multiple}}(Q_{\text{raw}}),\ \texttt{min\_order\_qty}\big), & Q_{\text{raw}}>0\end{cases} \]</div>
+<p><strong>MOQ is conditional</strong>: the floor applies only when an order is actually triggered (\(Q_{\text{raw}}>0\)).
+The engine never orders MOQ purely because of the floor — no order needed means no order. Rounding / MOQ reflect case
+packs and supplier minimums.</p>
+<p><strong>Inventory position = on-hand + on-order</strong> (<code>on_hand_qty</code> + on-order, where on-order =
+<code>open_po_qty</code> for purchased items or open production / WIP for produced items) —
+counting on-order stock avoids re-ordering what is already in transit or in production. The textbook position also subtracts
+<strong>backorders</strong>; v1 <strong>deliberately omits</strong> that term: <code>gold.outbounddeliveries</code> covers
+only 3 of 21 sold materials, so an ordered&nbsp;−&nbsp;delivered backlog is wildly overstated for the other 18 (see the
+architecture doc's data-realism gaps). Reinstate the backorder term once delivery coverage is completed in the synthetic
+data.</p>
+</div>
+
+<h3>3.7 &nbsp;EOQ — a cost trade-off (informational)</h3>
+<div class="card">
+<div class="eq">\[ Q^\star=\sqrt{\tfrac{2DK}{h}}\qquad (D=\text{annual demand},\ K=\texttt{ordering\_cost},\ h=\texttt{holding\_cost\_rate}\times\text{unit cost}). \]</div>
+<p>Minimizes ordering + holding cost; informational here (order size comes from the order-up-to gap), and the fixed
+\(Q\) in a true \((s,Q)\) policy. Needs a unit cost for \(h\); computed only where a cost exists, else null.</p>
+</div>
+
+<div class="section-title"><span class="num">4</span> Inputs &amp; sources</div>
+<table>
+  <tr><th>Symbol</th><th>Meaning</th><th>Source</th></tr>
+  <tr><td>\(\mu_X\)</td><td>Expected demand over \(P\)</td><td><strong>demand twin / forecast</strong> — sum of per-period <code>forecast_qty</code> over the first \(P\) periods</td></tr>
+  <tr><td>\(\{e_h\}\)</td><td>Cumulative \(h\)-step forecast errors, \(h=1\ldots H\)</td><td><strong><code>02</code> rolling-origin backtest</strong> — per-series raw error <em>sets</em> for every horizon up to \(H\) = max plausible lead time (new output); <code>14</code> selects \(h=P\) per series. Raw sets, not pre-baked quantiles, so <code>14</code> can apply the conformal order statistic, the SS floor, and pooling — and <code>02</code> stays decoupled from per-material lead times (which come from the procurement twin, built later)</td></tr>
+  <tr><td>\(L,R\) (→\(P\))</td><td>Lead time (weeks), review period</td><td>\(L=\max(1,\lceil\)lead_days\(/7\rceil)\) from the <strong>procurement twin</strong> (<code>avg_lead_time_days</code>, purchased) or the <strong>production twin</strong> (<code>avg_actual_lead_time_hours</code>&nbsp;/&nbsp;24, produced); \(R\) = review period via <code>planning_config</code></td></tr>
+  <tr><td>Inventory position</td><td>on-hand + on-order</td><td><strong>inventory</strong> (<code>on_hand_qty</code>) + on-order: <strong>procurement</strong> (<code>open_po_qty</code>) or <strong>production</strong> (<code>open_production_qty</code>)</td></tr>
+  <tr><td>SL, MOQ, multiple, \(K,h\)</td><td>Policy parameters</td><td><strong><code>planning_config</code></strong> via <code>cfg()</code></td></tr>
+  <tr><td>Primary supplier</td><td>For the PO recommendation</td><td><strong>procurement twin</strong> — the <strong>largest-PO-volume</strong> supplier per material&nbsp;×&nbsp;plant (single-source assumption)</td></tr>
+</table>
+
+<div class="section-title"><span class="num">5</span> Config parameters (<code>planning_config</code>)</div>
+<table>
+  <tr><th>Key</th><th>Default</th><th>Role</th></tr>
+  <tr><td><code>service_level</code></td><td>0.95</td><td>SL — the residual-quantile / cycle service level</td></tr>
+  <tr><td><code>policy_type</code> <span class="pill">to add</span></td><td>periodic</td><td><code>periodic</code> (\(P=L+R\), v1 — batch-fed twins) | <code>continuous</code> (\(P=L\), once feeds are real-time)</td></tr>
+  <tr><td><code>review_period_days</code></td><td>7</td><td>\(R\) — set to the twin refresh cadence; drops toward 0 as pipelines go real-time</td></tr>
+  <tr><td><code>min_order_qty</code></td><td>0</td><td>MOQ floor</td></tr>
+  <tr><td><code>order_multiple</code></td><td>1</td><td>Rounding multiple</td></tr>
+  <tr><td><code>holding_cost_rate</code> / <code>ordering_cost</code></td><td>0.25 / 50</td><td>EOQ (informational)</td></tr>
+</table>
+
+<div class="section-title"><span class="num">6</span> Outputs</div>
+<div class="card">
+<ul class="tight">
+  <li><strong><code>02</code> (extended):</strong> per-series <strong>cumulative forecast-error sets for all horizons \(h=1\ldots H\)</strong> (\(H\) = max plausible lead time) from the rolling-origin backtest — the calibration data for the conformal buffer; <code>14</code> picks \(h=P\) per series.</li>
+  <li><strong><code>monitoring.inventory_policy</code>:</strong> per material&nbsp;&times;&nbsp;plant — \(\mu_X\), \(P\), \(SS=\max(0,\hat Q_{\text{SL}})\), \(S^\star\), inventory position, suggested order qty, primary supplier, achieved-coverage + <code>insufficient_calibration</code> flags; deterministic overwrite, commented.</li>
+  <li><strong>Event write-back:</strong> <code>recommended_action</code> on open inventory events (e.g. <em>"Below reorder point (S*=1,240, position=310) — suggest PO of 1,300 to EcoPack Solutions"</em>), folded into <code>events</code> by a <code>LEFT JOIN</code> (idempotent).</li>
+</ul>
+</div>
+
+<div class="section-title"><span class="num">7</span> Assumptions &amp; limitations</div>
+<div class="callout assume"><span class="lbl">Stationary residual distribution</span>
+Pooling backtest errors assumes future errors resemble past ones. Regime shifts (new pricing, demand breaks) invalidate the pooled quantile.</div>
+<div class="callout assume"><span class="lbl">Homoscedasticity</span>
+Pooling absolute errors assumes spread is independent of the demand level. If bigger demand → bigger errors, use <strong>relative</strong> residuals (error/forecast) or bucket by level/season (§8).</div>
+<div class="callout assume"><span class="lbl">Exchangeability (time series)</span>
+Split-conformal coverage guarantees assume exchangeability, which autocorrelated series violate — so v1's coverage is empirical, not guaranteed. Time-series conformal (EnbPI/ACI) restores it (§8).</div>
+<div class="callout assume"><span class="lbl">Overlapping origins — nominal \(n\) overstates the evidence</span>
+Adjacent rolling origins share most of their \(P\)-week window, so the \(e_P\) values are autocorrelated and the effective
+sample size sits well below the origin count. v1 <strong>keeps all overlapping origins</strong> — deduplicating to
+non-overlapping windows would divide \(n\) by \(P\) and estimate the tail from almost nothing, which is strictly worse:
+the overlapped estimator is still consistent, just noisier than \(n\) independent points would be. Mitigations: the
+conformal \((n{+}1)\) correction already pushes conservative; the SL is capped by origin count
+(\(n\ge\text{SL}/(1-\text{SL})\), else <code>insufficient_calibration</code> + fallback); block-bootstrap / EnbPI (§8) is
+the principled fix.</div>
+<div class="callout assume"><span class="lbl">Cold start / sparse series → pooled relative residuals</span>
+Series with too little backtest history get no per-series quantile. v1 fallback: pool <strong>relative</strong> errors
+(error&nbsp;÷&nbsp;forecast level) across the material group, take the conformal quantile of the pooled set, and rescale
+by the series' \(\mu_X\). Relative — not absolute — errors, so high- and low-volume SKUs are not mixed on incompatible
+scales. Fail-safe beats emitting nothing: the row is flagged, never silently dropped.</div>
+<div class="callout assume"><span class="lbl">Fixed lead time; cycle service; independent-demand scope</span>
+v1 fixes \(L\) (uses the mean lead time, no lead-time variability), targets cycle service level \(\alpha\) (not fill rate \(\beta\)), and is scoped to items with <strong>independent (sales) demand</strong> — purchased sold items (PO) and produced sold items (order-up-to as an MPS signal). <strong>Dependent-demand</strong> items (components/intermediates consumed in production) are excluded and left to MRP; see §1.</div>
+
+<div class="section-title"><span class="num">8</span> Open decisions &amp; roadmap</div>
+<div class="card">
+<p>Upgrade ladder from the conformal v1 (each additive, no rework):</p>
+<ul class="tight">
+  <li><span class="pill">recommended</span> Have <code>02</code> emit the per-series cumulative-error <em>sets</em> for all horizons \(1\ldots H\) from its existing rolling-origin backtest.</li>
+  <li><strong>Time-series conformal</strong> (EnbPI / ACI, block bootstrap) for coverage under autocorrelation &amp; drift — also the principled fix for overlapping-origin correlation (§7).</li>
+  <li><strong>Heteroscedastic / conditional residuals</strong> (relative errors, seasonal buckets).</li>
+  <li><strong>Lead-time variability</strong> — random \(P\) (sample \(L\)); reintroduces the \(\mu_d^2\sigma_L^2\) effect.</li>
+  <li><strong>Generative probabilistic modelling</strong> (Poisson/NB/Croston + Monte-Carlo) for intermittent / lumpy SKUs where point-forecast residuals are ill-defined; classify by ADI / CV².</li>
+  <li><strong>Real-time twin feeds</strong> — \(R\to0\Rightarrow P\to L\): shorter protection interval, residuals measured at a shorter horizon, less safety stock (a quantifiable win from the streaming upgrade).</li>
+  <li>Fill-rate (\(\beta\)) target; EOQ with unit cost.</li>
+  <li>Later &amp; partly data-blocked: MEIO (network safety-stock placement), capacitated scheduling / distribution planning (LP/MILP).</li>
+</ul>
+</div>
+
+<div class="section-title"><span class="num">9</span> Why there is no LP/MILP here</div>
+<p class="section-sub">Single-echelon inventory policy has closed-form / empirical solutions; optimization is for constrained problems, later.</p>
+<div class="card">
+<p>The v1 engine is a <strong>quantile read off backtest residuals</strong> — no solver. LP/MILP becomes justified only
+when items share constraints or there are combinatorial trade-offs:</p>
+<table>
+  <tr><th>Problem</th><th>Method</th><th>Status here</th></tr>
+  <tr><td>Single-item reorder point / safety stock / EOQ</td><td>Closed-form / conformal quantile</td><td>This notebook</td></tr>
+  <tr><td>Capacitated lot-sizing / production scheduling</td><td>MILP</td><td>Later — blocked (needs <code>routing_master</code>, <code>setup_matrix</code>)</td></tr>
+  <tr><td>Distribution / transportation planning</td><td>LP/MILP</td><td>Later — blocked (needs <code>distribution_network_master</code>)</td></tr>
+  <tr><td>Multi-echelon safety-stock placement</td><td>Heuristic / LP relaxation</td><td>Later</td></tr>
+  <tr><td>Joint replenishment under shared budget / space / MOQ</td><td>MILP</td><td>Later</td></tr>
+</table>
+</div>
+
+<p class="foot">Companion to <code>notebooks/14_inventory_policy.ipynb</code> (planning engine · inventory policy).
+Part of the CoffCoff agentic supply-chain build. Equations rendered with MathJax.</p>
+
+</div>
+</body>
+</html>

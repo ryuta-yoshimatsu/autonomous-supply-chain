@@ -4,7 +4,7 @@ Streamlit app that visualizes all five agentic-supply-chain digital twins and le
 filter and drill down into any series' metric time-series.
 
 - **Twins:** Demand, Inventory, Procurement, Production, Distribution.
-- **Reads:** `mickmickstableaws_catalog.monitoring.*_twin_current` and `*_twin_metrics_timeseries`
+- **Reads:** `mickmickstableawscoff_catalog.monitoring.*_twin_current` and `*_twin_metrics_timeseries`
   via a Databricks **SQL warehouse** (analytical access; no data copied).
 - **Auth:** **user authorization (on-behalf-of-user)** — queries run as the logged-in user via
   the forwarded `x-forwarded-access-token`, so Unity Catalog permissions are enforced per user.
@@ -24,12 +24,12 @@ twin_explorer/
 ## Configuration
 `app.yaml` expects:
 - a SQL warehouse resource bound under the key **`sql_warehouse`** (injected as `DATABRICKS_WAREHOUSE_ID`),
-- `TWIN_CATALOG` / `TWIN_SCHEMA` (default `mickmickstableaws_catalog` / `monitoring`).
+- `TWIN_CATALOG` / `TWIN_SCHEMA` (default `mickmickstableawscoff_catalog` / `monitoring`).
 
 ## Run locally
 ```bash
 export DATABRICKS_WAREHOUSE_ID=<warehouse-id>
-export TWIN_CATALOG=mickmickstableaws_catalog TWIN_SCHEMA=monitoring
+export TWIN_CATALOG=mickmickstableawscoff_catalog TWIN_SCHEMA=monitoring
 pip install -r requirements.txt
 streamlit run app.py
 ```

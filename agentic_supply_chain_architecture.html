@@ -192,7 +192,7 @@
   tbody td { padding: 12px 14px; border-top: 1px solid var(--line); vertical-align: top; }
   tbody tr:nth-child(even) { background: #fbf7f1; }
   td .cap { font-weight: 700; color: var(--coffee); }
-  td.status { white-space: nowrap; font-weight: 700; }
+  td.status { font-weight: 700; }
   .s-green { color: var(--green); }
   .s-amber { color: var(--amber); }
   .s-red { color: var(--red); }
@@ -253,7 +253,7 @@
   <header class="hero">
     <p class="kicker">CoffCoff · Agentic Supply Chain</p>
     <h1>Agentic Supply Chain Orchestration</h1>
-    <p>A closed-loop planning platform where agents help planners <em>watch, reason, recommend, and act with approval</em> — sensing demand, generating supply / production / inventory / distribution plans, optimizing across constraints, simulating scenarios, and re-planning when reality drifts. Built on the <code style="background:rgba(255,255,255,.12);padding:1px 6px;border-radius:5px;color:#f3e7d7">mickmickstableaws_catalog.gold</code> dataset.</p>
+    <p>A closed-loop planning platform where agents help planners <em>watch, reason, recommend, and act with approval</em> — sensing demand, generating supply / production / inventory / distribution plans, optimizing across constraints, simulating scenarios, and re-planning when reality drifts. Built on the <code style="background:rgba(255,255,255,.12);padding:1px 6px;border-radius:5px;color:#f3e7d7">mickmickstableawscoff_catalog.gold_opus5</code> dataset (refreshed to 2026-08-04).</p>
   </header>
 
   <!-- LEGEND -->
@@ -276,9 +276,9 @@
       <div class="pflow">
         <div class="pstep"><span class="pdot" style="background:var(--green)"></span><span class="pn">1</span><span class="ptxt">Demand planning</span><span class="psub">Forecast future demand per product from sales history (Databricks-native forecasting).</span></div>
         <span class="psep">→</span>
-        <div class="pstep"><span class="pdot" style="background:var(--amber)"></span><span class="pn">2</span><span class="ptxt">Inventory optimization</span><span class="psub">Set safety stock &amp; reorder points to hit target service levels at minimum stock.</span></div>
+        <div class="pstep"><span class="pdot" style="background:var(--green)"></span><span class="pn">2</span><span class="ptxt">Inventory optimization</span><span class="psub"><strong>Built (nb 14):</strong> split-conformal reorder point / safety stock to hit target service levels at minimum stock.</span></div>
         <span class="psep">→</span>
-        <div class="pstep"><span class="pdot" style="background:var(--amber)"></span><span class="pn">3</span><span class="ptxt">Supply / MRP planning</span><span class="psub">Net demand against on-hand &amp; open POs to generate planned purchase orders.</span></div>
+        <div class="pstep"><span class="pdot" style="background:var(--green)"></span><span class="pn">3</span><span class="ptxt">Supply / MRP planning</span><span class="psub"><strong>Built (nb 15):</strong> net demand against on-hand &amp; open POs, explode the BOM, and generate planned purchase / production orders.</span></div>
         <span class="psep">→</span>
         <div class="pstep"><span class="pdot" style="background:var(--amber)"></span><span class="pn">4</span><span class="ptxt">Production scheduling</span><span class="psub">Sequence orders against finite work-centre capacity (ROASTER, PACKING).</span></div>
         <span class="psep">→</span>
@@ -296,12 +296,12 @@
       <h3><span class="tag">Execute / Source</span> System of record</h3>
       <p class="role">The transactional facts the plan is measured against, refreshed on a near-real-time schedule.</p>
       <div class="chips">
-        <span class="chip"><span class="dot" style="background:var(--green)"></span>gold SAP facts (17 tables)</span>
-        <span class="chip"><span class="dot" style="background:var(--green)"></span>Inventory snapshots + ledger (in gold)</span>
-        <span class="chip"><span class="dot" style="background:var(--green)"></span>Outbound deliveries + billing (in gold)</span>
-        <span class="chip"><span class="dot" style="background:var(--green)"></span>Demand plan (in gold)</span>
-        <span class="chip"><span class="dot" style="background:var(--red)"></span>Shipments / transport (to build)</span>
-        <span class="chip"><span class="dot" style="background:var(--amber)"></span>Scheduled refresh (snapshot to 2026-05-23)</span>
+        <span class="chip"><span class="dot" style="background:var(--green)"></span>gold_opus5 SAP facts (24 tables)</span>
+        <span class="chip"><span class="dot" style="background:var(--green)"></span>Inventory snapshots + ledger (in gold_opus5)</span>
+        <span class="chip"><span class="dot" style="background:var(--green)"></span>Outbound deliveries + billing (in gold_opus5)</span>
+        <span class="chip"><span class="dot" style="background:var(--green)"></span>Demand forecast (nb 02 → monitoring.demandplan)</span>
+        <span class="chip"><span class="dot" style="background:var(--green)"></span>Shipments / transport / freight lanes + routings (in gold_opus5)</span>
+        <span class="chip"><span class="dot" style="background:var(--amber)"></span>Scheduled refresh (snapshot to 2026-08-04)</span>
       </div>
     </div>
 
@@ -311,9 +311,9 @@
       <h3><span class="tag">Monitor</span> Control tower</h3>
       <p class="role">Real-time visibility of state, KPIs, and plan-vs-actual deviation.</p>
       <div class="chips">
-        <span class="chip"><span class="dot" style="background:var(--green)"></span>KPI semantic layer + kpi_timeseries</span>
+        <span class="chip"><span class="dot" style="background:var(--green)"></span>KPI semantic layer (UC metric views) + twin time-series</span>
         <span class="chip"><span class="dot" style="background:var(--green)"></span>AI/BI dashboard + Genie</span>
-        <span class="chip"><span class="dot" style="background:var(--green)"></span>Alerts + anomaly detection</span>
+        <span class="chip"><span class="dot" style="background:var(--amber)"></span>Events detection layer built (SQL Alerts / anomaly jobs to add)</span>
         <span class="chip"><span class="dot" style="background:var(--green)"></span>Interactive twin-network graph + node drilldown</span>
       </div>
     </div>
@@ -345,7 +345,7 @@
         <th style="width:20%">Capability</th>
         <th style="width:26%">What it does</th>
         <th style="width:30%">Data / inputs needed</th>
-        <th style="width:24%">Readiness in mickmickstableaws_catalog.gold</th>
+        <th style="width:24%">Readiness in mickmickstableawscoff_catalog.gold_opus5</th>
       </tr>
     </thead>
     <tbody>
@@ -353,31 +353,31 @@
         <td><span class="cap">Demand planning / sensing</span></td>
         <td>Statistical forecast + near-term demand sensing</td>
         <td>Sales history, calendar, product hierarchy</td>
-        <td class="status s-amber">🟡 salesorders history present; <code>demandplan</code> table exists but is empty<br><span style="font-weight:400;color:var(--muted)">first step: generate forecast rows</span></td>
+        <td class="status s-green">✅ <strong>Already built:</strong> Databricks-native forecast generated (nb <code>02</code>, AutoETS) and written to <code>monitoring.demandplan</code> (33 series, 13-week horizon from 2026-08-03, backtest WMAPE 8.8%)<br><span style="font-weight:400;color:var(--muted)">also emits rolling-origin error sets that calibrate the inventory policy; the upstream forecast in <code>gold_opus5.demandplan</code> is left untouched</span></td>
       </tr>
       <tr>
         <td><span class="cap">Inventory optimization</span></td>
         <td>Safety stock, reorder points, multi-echelon targets, days-of-cover</td>
         <td>On-hand stock, lead time + variability, service-level targets</td>
-        <td class="status s-amber">🟡 on-hand now in gold (<code>inventorysnapshots</code> / <code>inventoryledger</code>);<br><span style="font-weight:400;color:var(--muted)">still need policy params (service levels)</span></td>
+        <td class="status s-green">✅ <strong>Already built:</strong> split-conformal reorder-point / safety-stock engine (nb <code>14</code>) over on-hand + policy params in <code>planning_config</code>; writes <code>inventory_policy</code> + event recommendations<br><span style="font-weight:400;color:var(--muted)">purchased items; produced / dependent items handed to MRP</span></td>
       </tr>
       <tr>
         <td><span class="cap">Supply / procurement planning (MRP)</span></td>
         <td>Net requirements → planned purchase orders</td>
         <td>Demand, on-hand, on-order (open POs), BOM, lead times</td>
-        <td class="status s-amber">🟡 BOM, open POs &amp; on-hand in gold;<br><span style="font-weight:400;color:var(--muted)">needs populated demand forecast + MRP engine; supplier OTIF / on-time / in-full measured line-level (quantity-weighted variant optional)</span></td>
+        <td class="status s-green">✅ <strong>Already built:</strong> time-phased weekly MRP (nb <code>15</code>) over BOM, open POs &amp; on-hand in gold_opus5 and the demand forecast — multi-level BOM explosion → planned orders in <code>mrp_plan</code> (33 materials × 13 weeks)<br><span style="font-weight:400;color:var(--muted)">supplier OTIF / on-time / in-full measured line-level (quantity-weighted variant optional)</span></td>
       </tr>
       <tr>
         <td><span class="cap">Production planning &amp; finite scheduling</span></td>
         <td>Capacity-constrained order sequencing across work centres</td>
         <td>Routings, work-centre capacity, order pool</td>
-        <td class="status s-amber">🟡 capacity &amp; order pool present;<br><span style="font-weight:400;color:var(--muted)">no routing master / setup matrix; scheduler to build. Production-twin lead-time figures are recorded actuals (not a capacity model); quality percents are unweighted item-level averages (quantity-weighted optional)</span></td>
+        <td class="status s-amber">🟡 <strong>routing master + setup matrix in gold_opus5</strong>; routings feed the production twin (routed work content, work-backlog days as a capacity-pressure signal);<br><span style="font-weight:400;color:var(--muted)">changeover model + finite-capacity scheduler still to build; the snapshot has <strong>no open production orders</strong>, so work backlog currently reads 0. Bottleneck flag stays master-data. Production-twin lead-time figures are recorded actuals; quality percents are unweighted item-level averages (quantity-weighted optional)</span></td>
       </tr>
       <tr>
         <td><span class="cap">Distribution planning</span></td>
         <td>Replenish outlets from the central roastery</td>
         <td>Outlet network, outlet-level demand, transport</td>
-        <td class="status s-amber">🟡 <code>outbounddeliveries</code> in gold;<br><span style="font-weight:400;color:var(--muted)">still need outlet network + shipments. Distribution-twin service rates (on-time / in-full / OTIF) are line-level (fill rate is qty-weighted); transit time is a derived estimate, not carrier data</span></td>
+        <td class="status s-amber">🟡 <code>outbounddeliveries</code> now cover <strong>99% of shipped (wholesale) order lines</strong>; shipments, transport requirements and <strong>720 rated freight lanes to 40 wholesale destinations</strong> feed the distribution twin (actual transit, freight cost, window feasibility, transport-risk flag);<br><span style="font-weight:400;color:var(--muted)">still need an outlet / DC network (one plant only) + the freight-lane optimizer. Service rates (on-time / in-full / OTIF) are line-level (fill rate is qty-weighted)</span></td>
       </tr>
       <tr>
         <td><span class="cap">S&amp;OP / IBP</span></td>
@@ -409,59 +409,77 @@
   <!-- DATA GAP -->
   <h2 class="section-title"><span class="num">3</span>Data Readiness — Gaps Filled vs Still Missing</h2>
   <div class="gap-banner">
-    Moving to <strong><code>mickmickstableaws_catalog.gold</code></strong> closed most of the earlier gaps: <strong>inventory, outbound deliveries, and billing are now present</strong>. The <code>demandplan</code> table exists but is <strong>empty</strong>, so generating the demand forecast is the first prerequisite. What remains to build is the <strong>demand forecast, transport layer, distribution network model, planning parameters, production routings &amp; scheduler, and the plan-of-record store</strong>. Cards below are marked <span style="color:#1d5b3a;font-weight:700">Now in gold</span>, <span style="color:var(--amber);font-weight:700">Empty / first step</span>, or <span style="color:var(--red);font-weight:700">Missing</span>.
+    The source is now <strong><code>mickmickstableawscoff_catalog.gold_opus5</code></strong> (snapshot to <strong>2026-08-04</strong>), and every <code>monitoring</code> table was rebuilt from it on 2026-10-30. The refresh <strong>closed three data-realism gaps</strong>: wholesale orders now carry a realistic requested-delivery lead time, outbound deliveries cover all shipped (wholesale) order lines, and the roasted-500g chain is consumed continuously with right-sized stock. It also added <strong>720 rated freight lanes</strong> to 40 wholesale destinations. The forecast, planning parameters, inventory policy and <strong>MRP engine are built</strong>; the forecast is now written to <code>monitoring.demandplan</code> so the source schema stays read-only. What remains to build is the <strong>finite-capacity scheduler, freight-lane optimization, outlet / distribution network model, and the plan-of-record store</strong>; one new data gap is that the snapshot has <strong>no open production orders (no WIP)</strong>. Cards below are marked <span style="color:#1d5b3a;font-weight:700">Now in gold / Fixed in refresh / Already built</span>, <span style="color:var(--amber);font-weight:700">Data-realism gap / Partial</span>, or <span style="color:var(--red);font-weight:700">Missing</span>.
   </div>
 
   <div class="gap-grid">
 
-    <div class="gap-card partial">
-      <h4><span class="stg">0–1 · Demand</span> Demand forecast <span class="miss">Empty / first step</span></h4>
-      <p>The <code>demandplan</code> table exists but has <strong>0 rows</strong>. Before hydrating the Demand Twin, generate a Databricks-native demand forecast from sales history and write forecast rows to the agreed demand-plan table.</p>
-      <span class="lbl">Blocks</span>
+    <div class="gap-card done">
+      <h4><span class="stg">0–1 · Demand</span> Demand forecast <span class="miss">Already built</span></h4>
+      <p>A Databricks-native forecast (nb <code>02</code>, AutoETS with a seasonal-naive fallback) is generated from <code>gold_opus5.salesorders</code> history and written to <code>monitoring.demandplan</code>: 33 material × channel series, 13 weekly buckets from origin 2026-08-03, backtest WMAPE <strong>8.8%</strong> with 94% prediction-interval coverage. It also emits per-series rolling-origin error sets (<code>demand_forecast_error_sets</code>) that calibrate the inventory-policy safety stock. <code>gold_opus5.demandplan</code> already holds an upstream forecast; it is left untouched.</p>
+      <span class="lbl">Unblocks</span>
       <p>Demand Twin forecast state, forecast accuracy / bias, inventory projections, MRP netting, production priorities, and distribution planning.</p>
-      <span class="lbl">How we fill it</span>
-      <p class="fill">Run the demand forecasting job first, then hydrate <code>demand_twin_current</code> and <code>demand_twin_timeseries</code>.</p>
+      <span class="lbl">Source</span>
+      <p class="fill">nb 02 → <code>monitoring.demandplan</code> + <code>monitoring.demand_forecast_error_sets</code>; hydrates <code>demand_twin_current</code> / <code>demand_twin_metrics_timeseries</code>.</p>
     </div>
 
-    <div class="gap-card partial">
-      <h4><span class="stg">1 · Demand</span> Order → requested-delivery lead time <span class="miss">Data realism gap</span></h4>
-      <p>In <code>gold.salesorders</code>, <code>RequestedDeliveryDate_VDATU</code> averages <strong>0 days</strong> after <code>CreationDate_ERDAT</code> — every order is requested for same-day delivery. With no order-to-request lead time, the forward order book (open demand) collapses to ~1 week and overdue demand is overstated.</p>
-      <span class="lbl">Affects</span>
-      <p>Demand Twin open-demand vs backlog split, and any due-date / promise-date planning.</p>
-      <span class="lbl">How we fill it</span>
-      <p class="fill">Fix in synthetic data generation (out of scope for this build): set <code>RequestedDeliveryDate_VDATU = CreationDate_ERDAT +</code> a realistic, channel/material-specific lead time.</p>
+    <div class="gap-card done">
+      <h4><span class="stg">1 · Demand</span> Order → requested-delivery lead time <span class="miss">Fixed in refresh</span></h4>
+      <p>In <code>gold_opus5.salesorders</code>, wholesale orders (<code>ZOR</code>, channel 20) now request delivery <strong>5.3 days on average</strong> after creation (range 1–13 days). Counter sales (<code>ZPOS</code>) stay same-day, which is correct for in-store purchases, and delivery-app orders (<code>ZDEL</code>) are almost all same-day. Neither is netted against deliveries.</p>
+      <span class="lbl">Unblocks</span>
+      <p>A real forward order book for the Demand Twin open-demand vs backlog split, and due-date / promise-date planning for shipped orders.</p>
+      <span class="lbl">Source</span>
+      <p class="fill">gold_opus5.salesorders (<code>RequestedDeliveryDate_VDATU</code> vs <code>CreationDate_ERDAT</code>)</p>
     </div>
 
     <div class="gap-card done">
       <h4><span class="stg">2 · Inventory</span> On-hand inventory <span class="miss">Now in gold</span></h4>
-      <p>Stock-on-hand and movements are now available: <code>inventorysnapshots</code>, <code>inventoryledger</code>, and <code>inventoryopeningstock</code> in gold — point-in-time stock can be reconstructed.</p>
+      <p>Stock-on-hand and movements are available: <code>inventorysnapshots</code>, <code>inventoryledger</code>, and <code>inventoryopeningstock</code> in gold_opus5 — point-in-time stock can be reconstructed. All 22 stocked materials now have a days-of-cover reading at 2026-08-04.</p>
       <span class="lbl">Unblocks</span>
       <p>Days-of-cover, stockout risk, safety-stock targets, inventory optimization, MRP netting.</p>
       <span class="lbl">Source</span>
-      <p class="fill">gold.inventorysnapshots / inventoryledger / inventoryopeningstock</p>
+      <p class="fill">gold_opus5.inventorysnapshots / inventoryledger / inventoryopeningstock</p>
     </div>
 
-    <div class="gap-card">
-      <h4><span class="stg">2–3 · Inventory / Supply</span> Planning parameters master <span class="miss">Missing</span></h4>
-      <p>No service levels, safety-stock policies, reorder points, or a consolidated lead-time master — the "rules" the inventory and MRP engines optimize against.</p>
-      <span class="lbl">Blocks</span>
-      <p>Inventory optimization, MRP policy, S&amp;OP targets, scenario constraints.</p>
-      <span class="lbl">How we fill it</span>
-      <p class="fill">Model a planning_parameters master (per material: service level, lead time, policy).</p>
+    <div class="gap-card done">
+      <h4><span class="stg">2–4 · Inventory / Production</span> Roast-500g chain: intermittent consumption &amp; oversized stock <span class="miss">Fixed in refresh</span></h4>
+      <p>The roasted-500g bagging chain — roasted bulk beans, the empty 500g retail bag and the bag label — is now <strong>issued continuously</strong> (goods issues every week up to the snapshot, e.g. 853 issues each for bag and label) with <strong>right-sized stock</strong>: 39–40 days of cover for the roasted bulk, 44 days for bags, 53 days for labels, and 32–34 days for the finished 500g packs. Cover-based alerts now work for the whole chain, and none of it is flagged as overstock.</p>
+      <span class="lbl">Unblocks</span>
+      <p>Inventory-twin cover flags for the roast-and-bag chain; MRP still plans these dependent-demand items from the finished-goods BOM explosion.</p>
+      <span class="lbl">Source</span>
+      <p class="fill">gold_opus5.inventoryledger / inventorysnapshots → <code>inventory_twin_current</code></p>
     </div>
 
-    <div class="gap-card">
-      <h4><span class="stg">4 · Production</span> Production routings &amp; finite scheduler <span class="miss">Missing</span></h4>
-      <p>No <strong>routing master</strong> (operation sequence, standard times per work centre) and no sequence-dependent <strong>setup / changeover matrix</strong>; calendars are day-level only. Routings are merely referenced on order headers and observed after the fact in <code>productionconfirmations</code>.</p>
+    <div class="gap-card done">
+      <h4><span class="stg">2–3 · Inventory / Supply</span> Planning parameters master <span class="miss">Already built</span></h4>
+      <p><strong>Authored config</strong> (not sourced from gold): <code>monitoring.planning_config</code> holds the "rules" the inventory and MRP engines optimize against — service level, review period, MOQ / order multiple, holding &amp; ordering cost, and detection thresholds — as key–value params with scope-based overrides (MATERIAL &gt; MATERIAL_GROUP &gt; PLANT &gt; GLOBAL).</p>
+      <span class="lbl">Unblocks</span>
+      <p>Inventory optimization (already consuming it), MRP policy, S&amp;OP targets, scenario constraints.</p>
+      <span class="lbl">Source</span>
+      <p class="fill">nb 03 → <code>monitoring.planning_config</code> (+ <code>v_resolved_config</code>); numbered before the twins so its params exist before any detection notebook reads them; data-derived params (lead time, demand stats) stay in the twins.</p>
+    </div>
+
+    <div class="gap-card partial">
+      <h4><span class="stg">4 · Production</span> Production routings &amp; finite scheduler <span class="miss">Partial</span></h4>
+      <p>The <strong>routing master</strong> (operation, standard values, work centre) is in gold_opus5 (<code>routings</code>) and feeds the production twin: routed work content per unit, primary work centre, and <strong>work-backlog days</strong> (open work content ÷ effective daily capacity) as a capacity-pressure signal. The bottleneck flag remains the master-data designation (ROASTER / PACKING, 9 items). The sequence-dependent <strong>setup / changeover matrix</strong> is present (<code>setupmatrix</code>, 27 synthesised transitions across 3 work centres) but not yet modelled, and there is no finite-capacity scheduler.</p>
       <span class="lbl">Blocks</span>
-      <p>Finite-capacity scheduling, order sequencing, realistic start/finish times, bottleneck planning.</p>
+      <p>Finite-capacity scheduling, order sequencing, realistic start/finish times.</p>
       <span class="lbl">How we fill it</span>
-      <p class="fill">Model a routings master + setup matrix, then build the finite-capacity scheduler (heuristic + OR-Tools).</p>
+      <p class="fill">Routing-based load is live; next build the setup-matrix changeover model and finite-capacity scheduler (heuristic + OR-Tools).</p>
+    </div>
+
+    <div class="gap-card partial">
+      <h4><span class="stg">4 · Production</span> Open production orders / WIP <span class="miss">Data realism gap</span></h4>
+      <p>Every production order item in the last 365 days of <code>gold_opus5.productionorders</code> is already delivered — the snapshot has <strong>no open production orders</strong>. <code>OpenQuantity</code> still holds the small planned-vs-received residual on closed orders (~0.8%), which the twin used to count as open work and which inflated work backlog to tens of thousands of days. The twin now counts open quantity only on undelivered items, so open quantity and work backlog read 0.</p>
+      <span class="lbl">Affects</span>
+      <p>Production Twin WIP / open orders, work-backlog capacity pressure, and MRP scheduled receipts from production.</p>
+      <span class="lbl">How we fill it</span>
+      <p class="fill">Fix in synthetic data generation (out of scope for this build): leave a realistic set of released / in-progress orders open at the snapshot date.</p>
     </div>
 
     <div class="gap-card">
       <h4><span class="stg">5 · Distribution</span> Outlet / distribution network <span class="miss">Missing</span></h4>
-      <p>The data describes a central roastery only — the multi-echelon <strong>nodes (outlets / DCs)</strong> and their demand are not modelled.</p>
+      <p>The plant master still has one plant only — the Oxford Street roastery &amp; café. The refresh added <strong>40 transport destinations</strong>, but these are the 40 wholesale café <em>customers</em>, not Coff-Coff outlets, so the network is single-echelon (roastery → customer). The multi-echelon <strong>nodes (outlets / DCs)</strong>, their stock, and their local demand are still not modelled.</p>
       <span class="lbl">Blocks</span>
       <p>Multi-echelon inventory, distribution planning, outlet replenishment, network optimization.</p>
       <span class="lbl">How we fill it</span>
@@ -470,29 +488,29 @@
 
     <div class="gap-card done">
       <h4><span class="stg">5 · Distribution</span> Outbound deliveries <span class="miss">Now in gold</span></h4>
-      <p>Outbound fulfillment is now modelled in <code>outbounddeliveries</code> (actual ship date, delivered qty, linked to sales orders), with <code>billinginvoices</code> for the cash side.</p>
+      <p>Outbound fulfillment is modelled in <code>outbounddeliveries</code> (actual ship date, delivered qty, linked to sales orders), with <code>billinginvoices</code> for the cash side.</p>
       <span class="lbl">Unblocks</span>
       <p>Outbound OTIF, fill rate, perfect-order, delivery plan-vs-actual, order-to-cash.</p>
       <span class="lbl">Source</span>
-      <p class="fill">gold.outbounddeliveries + gold.billinginvoices</p>
+      <p class="fill">gold_opus5.outbounddeliveries + gold_opus5.billinginvoices</p>
+    </div>
+
+    <div class="gap-card done">
+      <h4><span class="stg">5 · Distribution</span> Delivery coverage of demand <span class="miss">Fixed in refresh</span></h4>
+      <p><code>gold_opus5.outbounddeliveries</code> now holds <strong>32,485 delivery lines</strong> (up from 2,148) and covers <strong>99.3% of shipped order lines</strong> — every material sold on wholesale orders (<code>ZOR</code>, 4 of the 18 sold materials), linked via <code>ReferenceSDDocument_VGBEL</code> / <code>ReferenceSDDocumentItem_VGPOS</code>. The other 14 materials are sold only as counter sales (<code>ZPOS</code>) or delivery-app orders (<code>ZDEL</code>), which are fulfilled without a tracked delivery and are not netted. Over the last 365 days the Distribution Twin reads fill rate 99.5% and OTIF 88%.</p>
+      <span class="lbl">Unblocks</span>
+      <p>Demand Twin backlog (ordered − delivered), Distribution Twin fill rate / OTIF across all shipped materials.</p>
+      <span class="lbl">Source</span>
+      <p class="fill">gold_opus5.outbounddeliveries → <code>demand_twin_current</code> / <code>distribution_twin_current</code></p>
     </div>
 
     <div class="gap-card partial">
-      <h4><span class="stg">5 · Distribution</span> Delivery coverage of demand <span class="miss">Data realism gap</span></h4>
-      <p><code>gold.outbounddeliveries</code> holds shipments for only <strong>3 of the 21 sold materials</strong> (2,148 lines). The other 18 materials have no <code>DeliveryQuantity_LFIMG</code> / <code>ReferenceSDDocument_VGBEL</code> rows, so when the Demand Twin nets the order book against deliveries (ordered − delivered) those materials appear 100% unfulfilled.</p>
-      <span class="lbl">Affects</span>
-      <p>Demand Twin backlog (ordered − delivered), Distribution Twin fill rate / OTIF coverage.</p>
-      <span class="lbl">How we fill it</span>
-      <p class="fill">Fix in synthetic data generation (out of scope for this build): generate <code>outbounddeliveries</code> for all shipped materials, linked via <code>ReferenceSDDocument_VGBEL</code> / <code>ReferenceSDDocumentItem_VGPOS</code>.</p>
-    </div>
-
-    <div class="gap-card">
-      <h4><span class="stg">5 · Distribution</span> Shipments &amp; transport <span class="miss">Missing</span></h4>
-      <p><code>Route_ROUTE</code> is empty and there is a <strong>single shipping point</strong> across all 1.9M order lines — no carrier, route, or freight data.</p>
+      <h4><span class="stg">5 · Distribution</span> Shipments &amp; transport <span class="miss">Partial</span></h4>
+      <p><code>shipments</code>, <code>transportrequirements</code>, <code>freightlanes</code>, <code>carriersmd</code> and <code>transportlocations</code> are in gold_opus5. Transport requirements are 1:1 with delivery lines and feed the distribution twin: <strong>actual vs planned transit, freight cost, window feasibility, service lateness, and a transport-risk flag</strong>. The refresh expanded <code>freightlanes</code> from 10 to <strong>720 rated lane offers</strong> (carrier × service level × validity, roastery → 40 destinations), so the data for rate benchmarking and carrier selection is now present. Still missing: the freight-lane benchmarking / transport optimization logic itself.</p>
       <span class="lbl">Blocks</span>
-      <p>Freight cost, route / lane performance, transport optimization, distribution planning.</p>
+      <p>Freight-lane optimization, carrier selection, transport cost-to-serve modelling.</p>
       <span class="lbl">How we fill it</span>
-      <p class="fill">Synthesize shipments (carrier, route, freight cost, ship / arrive timestamps).</p>
+      <p class="fill">Transport actuals are live in the twin and lane rates are in the source; next build freight-lane rate benchmarking and a transport/distribution planning engine.</p>
     </div>
 
     <div class="gap-card">
@@ -506,7 +524,7 @@
 
     <div class="gap-card partial">
       <h4><span class="stg">Cross-cutting</span> Near-real-time data feed <span class="miss">Partial</span></h4>
-      <p>Data is a batch snapshot to <strong>2026-05-23</strong> — "current" means as of that date, not today. There is no live feed.</p>
+      <p>Data is a batch snapshot to <strong>2026-08-04</strong> (previously 2026-05-23) — "current" means as of that date, not today. There is no live feed; the monitoring layer was last rebuilt from it on 2026-10-30.</p>
       <span class="lbl">Blocks</span>
       <p>True "real-time" visibility, timely deviation detection.</p>
       <span class="lbl">How we fill it</span>
@@ -530,7 +548,7 @@
     </div>
     <div class="strength-card">
       <h4>Separate source facts from planning state</h4>
-      <p>Keep <code>gold</code> as read-only source-of-truth. Write forecasts, policies, scenarios, recommendations, approvals, and committed plans to a separate planning store (Lakebase + Delta).</p>
+      <p>Keep <code>gold_opus5</code> as read-only source-of-truth. Write forecasts, policies, scenarios, recommendations, approvals, and committed plans to a separate planning store (Lakebase + Delta).</p>
     </div>
     <div class="strength-card">
       <h4>Bounded agent tools and audit logs</h4>
@@ -551,7 +569,7 @@
   </div>
 
   <div class="footer">
-    CoffCoff Agentic Supply Chain · Closed-Loop Orchestration Architecture · readiness verified against <code>mickmickstableaws_catalog.gold</code>
+    CoffCoff Agentic Supply Chain · Closed-Loop Orchestration Architecture · readiness verified against <code>mickmickstableawscoff_catalog.gold_opus5</code> (snapshot 2026-08-04, monitoring rebuilt 2026-10-30)
   </div>
 
 </div>

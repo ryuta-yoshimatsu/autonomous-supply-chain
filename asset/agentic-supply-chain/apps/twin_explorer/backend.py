@@ -12,7 +12,7 @@ import streamlit as st
 from databricks import sql
 from databricks.sdk.core import Config
 
-CATALOG = os.getenv("TWIN_CATALOG", "mickmickstableaws_catalog")
+CATALOG = os.getenv("TWIN_CATALOG", "mickmickstableawscoff_catalog")
 SCHEMA = os.getenv("TWIN_SCHEMA", "monitoring")
 WAREHOUSE_ID = os.getenv("DATABRICKS_WAREHOUSE_ID", "")
 
@@ -99,6 +99,13 @@ def load_timeseries(table: str, where: str, user_id: str, token: str | None) -> 
 
 
 # ---- Relationship layer (twin network graph) ------------------------------------------------
+
+def load_events(user_id: str, token: str | None) -> pd.DataFrame:
+    return run_query(
+        f"SELECT * FROM {fq('events')} "
+        "ORDER BY CASE severity WHEN 'HIGH' THEN 0 WHEN 'MEDIUM' THEN 1 ELSE 2 END, function, event_type",
+        user_id, token)
+
 
 def load_nodes(user_id: str, token: str | None) -> pd.DataFrame:
     return run_query(f"SELECT * FROM {fq('v_network_nodes')}", user_id, token)

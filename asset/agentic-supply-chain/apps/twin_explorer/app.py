@@ -189,6 +189,69 @@ def render_twin(twin_key: str, user_id: str, token):
     render_drilldown(twin_key, cfg, filtered, user_id, token)
 
 
+def render_events(user_id: str, token):
+    st.header("🚨 Events")
+    st.caption(
+        "Cross-twin detected abnormalities from `monitoring.events`. "
+        "Recommended actions are filled by the planning engine (coming next)."
+    )
+    try:
+        ev = backend.load_events(user_id, token)
+    except Exception as e:
+        st.error(f"Could not load events: {type(e).__name__}: {e}")
+        st.json(backend.diagnostics(token))
+        return
+    if ev.empty:
+        st.success("No events detected.")
+        return
+
+    c1, c2, c3, c4 = st.columns(4)
+    c1.metric("Events", f"{len(ev):,}")
+    c2.metric("High", int((ev["severity"] == "HIGH").sum()))
+    c3.metric("Medium", int((ev["severity"] == "MEDIUM").sum()))
+    c4.metric("Open", int((ev["status"] == "open").sum()))
+
+    filtered = render_filters(ev, ["function", "severity", "status", "event_type"])
+
+    cols = [c for c in ["severity", "function", "event_type", "entity_label", "plant", "channel",
+                        "title", "detail", "owner", "status", "recommended_action"]
+            if c in filtered.columns]
+    st.dataframe(filtered[cols], use_container_width=True, hide_index=True)
+    st.caption(f"{len(filtered):,} of {len(ev):,} events")
+
+    st.divider()
+    st.subheader("Event drilldown")
+    if filtered.empty:
+        st.info("No events match the current filters.")
+        return
+
+    labels = {r["event_id"]: f"[{r['severity']}] {r['title']}" for _, r in filtered.iterrows()}
+    eid = st.selectbox("Event", list(labels.keys()), format_func=lambda x: labels[x])
+    row = filtered[filtered["event_id"] == eid].iloc[0]
+
+    st.markdown(f"**{row['title']}**")
+    st.caption(f"{row['function']} · {row['event_type']} · severity {row['severity']} · "
+               f"owner {row['owner']} · status {row['status']}")
+    st.write(f"Detail: {row['detail']}")
+    ra = row.get("recommended_action")
+    if ra:
+        st.success(f"Recommended action: {ra}")
+    else:
+        st.info("No recommended action yet — the planning engine will populate this.")
+
+    prefix = {"MATERIAL": "MATERIAL", "SUPPLIER": "SUPPLIER"}.get(row.get("entity_type"))
+    if prefix and row.get("entity_id"):
+        node_id = f"{prefix}:{row['entity_id']}"
+        with st.spinner("Loading affected entity's twin rows…"):
+            sections = backend.node_drilldown(node_id, user_id, token)
+        if sections:
+            st.markdown(f"**Affected {row['entity_type'].lower()}: {row['entity_label']}**")
+            tabs = st.tabs(list(sections.keys()))
+            for tab, (title, df) in zip(tabs, sections.items()):
+                with tab:
+                    st.dataframe(df, use_container_width=True, hide_index=True)
+
+
 def main():
     st.title("🔭 Digital Twin Explorer")
     user_id, token = backend.get_user()
@@ -197,9 +260,11 @@ def main():
         "Explore the twin network or drill into any single twin."
     )
     st.sidebar.caption(f"Signed in as: {user_id}")
-    view = st.sidebar.radio("View", ["🕸️ Network", "🔭 Twins"])
+    view = st.sidebar.radio("View", ["🕸️ Network", "🔭 Twins", "🚨 Events"])
     if view == "🕸️ Network":
         network.render_network(user_id, token)
+    elif view == "🚨 Events":
+        render_events(user_id, token)
     else:
         twin_key = st.sidebar.radio("Digital twin", list(TWINS.keys()),
                                     format_func=lambda k: f"{TWINS[k].get('icon','')} {k}")

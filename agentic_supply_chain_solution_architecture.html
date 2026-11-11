@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CoffCoff — Agentic Supply Chain · Solution Architecture</title>
+<style>
+  :root {
+    --espresso:#2c1a10; --coffee:#3b2415; --mocha:#5a3a22; --latte:#c9a27e;
+    --cream:#f6f1ea; --paper:#fffdfa; --ink:#2b2118; --muted:#7c6b5b; --line:#e4d9cc;
+    --green:#2e7d52; --green-bg:#e6f4ec; --amber:#c9791b; --amber-bg:#fbeedd;
+    --red:#c0392b; --red-bg:#fbe7e4; --gold:#b07d2b; --gold-bg:#f7ecd8;
+    --mon:#2f5fa8; --mon-bg:#e8eef8; --purple:#6b4bb0; --purple-bg:#f0ebf8;
+    --teal:#2f6f8f; --teal-bg:#e4f0f5;
+    --shadow:0 6px 22px rgba(44,26,16,.10);
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:linear-gradient(160deg,#f1e8dd 0%,var(--cream) 40%); color:var(--ink); line-height:1.5;
+    -webkit-font-smoothing:antialiased; }
+  .wrap { max-width:1280px; margin:0 auto; padding:40px 28px 80px; }
+  code { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:.92em; background:#efe6d9; padding:1px 5px; border-radius:4px; }
+
+  header.hero { background:radial-gradient(120% 140% at 0% 0%,var(--mocha) 0%,var(--coffee) 45%,var(--espresso) 100%);
+    color:#f7efe6; border-radius:22px; padding:36px 40px; box-shadow:var(--shadow); position:relative; overflow:hidden; }
+  header.hero::after { content:"☕"; position:absolute; font-size:190px; right:-10px; top:-40px; opacity:.06; transform:rotate(-12deg); }
+  .kicker { text-transform:uppercase; letter-spacing:3px; font-size:12px; color:var(--latte); font-weight:700; margin:0 0 10px; }
+  header.hero h1 { margin:0 0 10px; font-size:30px; line-height:1.2; }
+  header.hero p { margin:0; max-width:900px; color:#e7d9c8; font-size:15px; }
+  header.hero code { background:rgba(255,255,255,.12); color:#f3e7d7; }
+  .facts { display:flex; flex-wrap:wrap; gap:10px; margin-top:18px; }
+  .fact { background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.14); border-radius:10px; padding:7px 12px; font-size:12.5px; color:#f1e4d4; }
+  .fact b { color:#fff; }
+
+  .section-title { font-size:21px; margin:50px 0 6px; color:var(--coffee); display:flex; align-items:center; gap:10px; }
+  .section-title .num { background:var(--coffee); color:var(--cream); width:28px; height:28px; border-radius:8px;
+    display:inline-flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; flex:none; }
+  .section-sub { color:var(--muted); margin:0 0 20px; font-size:14.5px; }
+
+  .legend { display:flex; flex-wrap:wrap; gap:12px; margin:18px 0 4px; }
+  .badge { display:inline-flex; align-items:center; gap:7px; font-size:12.5px; font-weight:600; padding:5px 12px; border-radius:999px; border:1px solid transparent; }
+  .dot { width:9px; height:9px; border-radius:50%; flex:none; }
+  .b-green { background:var(--green-bg); color:#1d5b3a; border-color:#bfe0cd; } .b-green .dot { background:var(--green); }
+  .b-amber { background:var(--amber-bg); color:#8a5210; border-color:#f0d6b3; } .b-amber .dot { background:var(--amber); }
+  .b-red { background:var(--red-bg); color:#8e2018; border-color:#f1c4bd; } .b-red .dot { background:var(--red); }
+  .b-gold { background:var(--gold-bg); color:#7a5418; border-color:#e6c79a; } .b-gold .dot { background:var(--gold); }
+  .b-mon { background:var(--mon-bg); color:#1f437a; border-color:#c3d3ee; } .b-mon .dot { background:var(--mon); }
+
+  /* ---------- Layered diagram ---------- */
+  .diagram { display:grid; grid-template-columns:1fr 210px; gap:18px; margin-top:14px; }
+  .stack { display:flex; flex-direction:column; gap:0; position:relative; }
+  .layer { display:grid; grid-template-columns:150px 1fr; background:var(--paper); border:1px solid var(--line);
+    border-radius:16px; box-shadow:var(--shadow); overflow:hidden; }
+  .layer .lname { padding:14px 14px; color:#fff; font-weight:700; font-size:13px; display:flex; flex-direction:column; justify-content:center; gap:4px; }
+  .layer .lname small { font-weight:500; font-size:11px; opacity:.85; line-height:1.3; }
+  .layer .lbody { padding:12px 14px; display:flex; flex-wrap:wrap; gap:10px; align-items:stretch; }
+  .l-src .lname { background:var(--gold); }
+  .l-found .lname { background:#7b5a3c; }
+  .l-fcst .lname { background:var(--purple); }
+  .l-twin .lname { background:var(--mon); }
+  .l-sem .lname { background:var(--teal); }
+  .l-det .lname { background:#a1432f; }
+  .l-plan .lname { background:#4f3a8a; }
+  .l-use .lname { background:var(--green); }
+  .l-resp .lname { background:var(--amber); }
+  .flow { text-align:center; color:var(--mocha); font-size:12px; font-weight:600; padding:5px 0; letter-spacing:.3px; }
+  .flow span { color:var(--muted); font-weight:500; }
+
+  .node { background:var(--cream); border:1px solid var(--line); border-radius:11px; padding:9px 11px; min-width:150px; flex:1 1 170px;
+    position:relative; font-size:12px; }
+  .node h5 { margin:0 0 3px; font-size:12.8px; color:var(--coffee); display:flex; align-items:center; gap:6px; }
+  .node .nb { font-size:10px; font-weight:700; background:var(--coffee); color:var(--cream); border-radius:5px; padding:1px 5px; flex:none; }
+  .node .t { font-family:ui-monospace,Menlo,monospace; font-size:11px; color:#3b3127; display:block; word-break:break-word; }
+  .node .m { color:var(--muted); font-size:11.3px; margin-top:3px; display:block; }
+  .node .st { position:absolute; top:9px; right:9px; width:9px; height:9px; border-radius:50%; }
+  .node.planned { background:repeating-linear-gradient(135deg,#fff 0 8px,#fbf3ee 8px 16px); border-style:dashed; border-color:#e2b8ad; }
+  .node.partial { border-color:#efcf9f; }
+  .s-g { background:var(--green); } .s-a { background:var(--amber); } .s-r { background:var(--red); }
+  .twin { flex:1 1 180px; border-top:3px solid var(--mon); }
+  .twin .kpi { display:flex; flex-wrap:wrap; gap:4px; margin-top:5px; }
+  .twin .kpi span { background:#fff; border:1px solid var(--line); border-radius:6px; padding:1px 6px; font-size:10.5px; color:#3b3127; }
+
+  .rail { display:flex; flex-direction:column; gap:12px; }
+  .rail-card { background:var(--paper); border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow); padding:13px 14px; font-size:12px; }
+  .rail-card h4 { margin:0 0 6px; font-size:13px; color:var(--coffee); }
+  .rail-card ul { margin:0; padding-left:16px; } .rail-card li { margin-bottom:4px; }
+  .loop { background:var(--purple-bg); border:1px dashed #c9bbe6; color:#43356b; }
+  .loop .big { font-size:30px; line-height:1; color:var(--purple); }
+
+  /* ---------- DAG ---------- */
+  .dag-wrap { background:var(--paper); border:1px solid var(--line); border-radius:16px; box-shadow:var(--shadow); padding:14px; overflow-x:auto; }
+  svg text { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+
+  /* ---------- Detail cards ---------- */
+  .grid2 { display:grid; grid-template-columns:repeat(2,1fr); gap:16px; }
+  .grid3 { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+  .card { background:var(--paper); border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow); padding:16px 18px; border-top:4px solid var(--coffee); }
+  .card h4 { margin:0 0 8px; font-size:15px; color:var(--coffee); display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .card p { margin:0 0 8px; font-size:13px; }
+  .card ul { margin:0; padding-left:18px; font-size:12.8px; } .card li { margin-bottom:5px; }
+  .card .tag { font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.6px; padding:2px 8px; border-radius:6px; }
+  .tg { background:var(--green-bg); color:#1d5b3a; } .ta { background:var(--amber-bg); color:#8a5210; } .tr { background:var(--red-bg); color:#8e2018; }
+  .c-src { border-top-color:var(--gold); } .c-found { border-top-color:#7b5a3c; } .c-fcst { border-top-color:var(--purple); }
+  .c-twin { border-top-color:var(--mon); } .c-sem { border-top-color:var(--teal); } .c-det { border-top-color:#a1432f; }
+  .c-plan { border-top-color:#4f3a8a; } .c-use { border-top-color:var(--green); } .c-resp { border-top-color:var(--amber); }
+
+  table { width:100%; border-collapse:collapse; background:var(--paper); border-radius:14px; overflow:hidden; box-shadow:var(--shadow); font-size:13px; }
+  thead th { background:var(--coffee); color:var(--cream); text-align:left; padding:11px 13px; font-size:12px; letter-spacing:.3px; }
+  tbody td { padding:10px 13px; border-top:1px solid var(--line); vertical-align:top; }
+  tbody tr:nth-child(even) { background:#fbf7f1; }
+  td.num { text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; }
+
+  .note { margin-top:22px; background:var(--purple-bg); border:1px solid #d6c9ef; border-radius:14px; padding:16px 20px; font-size:13.5px; color:#43356b; }
+  .footer { margin-top:40px; color:var(--muted); font-size:12.5px; text-align:center; }
+
+  @media (max-width:980px) {
+    .diagram { grid-template-columns:1fr; }
+    .grid2, .grid3 { grid-template-columns:1fr; }
+    .layer { grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <p class="kicker">CoffCoff · Agentic Supply Chain</p>
+    <h1>Solution Architecture — As Built</h1>
+    <p>The end-to-end Databricks solution as it runs today: read-only SAP-style source facts in <code>gold_opus5</code> feed a forecast, five digital twins, a governed relationship + KPI layer, a cross-twin events inbox, and two planning engines (inventory policy + time-phased MRP) — all in the <code>monitoring</code> schema and consumed by an AI/BI control tower, Genie, and the Twin Explorer app. The plan-of-record store and governed agent close the loop next.</p>
+    <div class="facts">
+      <span class="fact">Catalog <b>mickmickstableawscoff_catalog</b></span>
+      <span class="fact">Source <b>gold_opus5</b> · 24 tables · snapshot <b>2026-08-04</b></span>
+      <span class="fact">Derived <b>monitoring</b> · 17 tables · 4 views · 5 metric views</span>
+      <span class="fact">Last full rebuild <b>2026-10-30</b> · 14 notebooks · ~25 min serverless</span>
+    </div>
+  </header>
+
+  <div class="legend">
+    <span class="badge b-green"><span class="dot"></span>Built &amp; running</span>
+    <span class="badge b-amber"><span class="dot"></span>Built with data caveat</span>
+    <span class="badge b-red"><span class="dot"></span>Planned — not built yet</span>
+    <span class="badge b-gold"><span class="dot"></span>Source (read-only)</span>
+    <span class="badge b-mon"><span class="dot"></span>Derived (monitoring schema)</span>
+  </div>
+
+  <!-- ================= 1. LAYERED DIAGRAM ================= -->
+  <h2 class="section-title"><span class="num">1</span>Layered Architecture</h2>
+  <p class="section-sub">Each layer reads only from the layers above it. Source facts are never mutated; every derived object lives in <code>mickmickstableawscoff_catalog.monitoring</code>. Notebook numbers (<code>nb</code>) show which build step owns each object.</p>
+
+  <div class="diagram">
+    <div class="stack">
+
+      <!-- SOURCE -->
+      <div class="layer l-src">
+        <div class="lname">SOURCE<small>gold_opus5 · read-only<br>SAP S/4HANA-style facts</small></div>
+        <div class="lbody">
+          <div class="node"><span class="st s-g"></span><h5>Sales &amp; customers</h5><span class="t">salesorders · customersmd · billinginvoices</span><span class="m">1.99M order lines · 3 channels (ZPOS / ZOR / ZDEL)</span></div>
+          <div class="node"><span class="st s-g"></span><h5>Inventory</h5><span class="t">inventorysnapshots · inventoryledger · inventoryopeningstock · goodsmovements</span><span class="m">daily snapshots to 2026-08-04 · 1 plant</span></div>
+          <div class="node"><span class="st s-g"></span><h5>Procurement</h5><span class="t">vendorperformance</span><span class="m">PO lines · receipts · OTIF inputs</span></div>
+          <div class="node partial"><span class="st s-a"></span><h5>Production</h5><span class="t">productionorders · productionordersheader · productionconfirmations · billofmaterials · routings · workcentres · setupmatrix</span><span class="m">no open orders at snapshot (no WIP)</span></div>
+          <div class="node"><span class="st s-g"></span><h5>Distribution &amp; transport</h5><span class="t">outbounddeliveries · shipments · transportrequirements · freightlanes · carriersmd · transportlocations</span><span class="m">32,485 delivery lines · 720 rated lanes · 40 destinations</span></div>
+          <div class="node"><span class="st s-g"></span><h5>Master data</h5><span class="t">materialsmd · producthierarchiesmd</span><span class="m"><code>demandplan</code> (upstream forecast) — not used</span></div>
+        </div>
+      </div>
+      <div class="flow">▼ read via widgets <span>source_catalog / source_schema</span></div>
+
+      <!-- FOUNDATION -->
+      <div class="layer l-found">
+        <div class="lname">FOUNDATION<small>schema · readiness · policy config</small></div>
+        <div class="lbody">
+          <div class="node"><span class="st s-g"></span><h5><span class="nb">00</span>Monitoring schema</h5><span class="t">monitoring</span><span class="m">isolates all derived state</span></div>
+          <div class="node"><span class="st s-g"></span><h5><span class="nb">01</span>Source mapping &amp; readiness</h5><span class="t">inline report</span><span class="m">25 canonical roles → tables; profiles rows, spans, freshness; 1 role missing (distribution network)</span></div>
+          <div class="node"><span class="st s-g"></span><h5><span class="nb">03</span>Planning config</h5><span class="t">planning_config · v_resolved_config</span><span class="m">16 GLOBAL params; MATERIAL &gt; GROUP &gt; PLANT &gt; GLOBAL overrides</span></div>
+        </div>
+      </div>
+      <div class="flow">▼</div>
+
+      <!-- FORECAST -->
+      <div class="layer l-fcst">
+        <div class="lname">FORECAST<small>Databricks-native<br>statsforecast</small></div>
+        <div class="lbody">
+          <div class="node"><span class="st s-g"></span><h5><span class="nb">02</span>Demand forecast (AutoETS)</h5><span class="t">demandplan</span><span class="m">33 material × channel series · 13 weekly buckets from 2026-08-03 · seasonal-naive fallback</span></div>
+          <div class="node"><span class="st s-g"></span><h5><span class="nb">02</span>Backtest accuracy</h5><span class="t">demand_forecast_accuracy</span><span class="m">6 rolling origins · WMAPE 8.8% · 94% PI coverage</span></div>
+          <div class="node"><span class="st s-g"></span><h5><span class="nb">02</span>Conformal error sets</h5><span class="t">demand_forecast_error_sets</span><span class="m">23,166 cumulative h-step errors → calibrate safety stock (nb 14)</span></div>
+        </div>
+      </div>
+      <div class="flow">▼ firm orders + forecast + stock + supply + production + fulfilment</div>
+
+      <!-- TWINS -->
+      <div class="layer l-twin">
+        <div class="lname">DIGITAL TWINS<small>*_twin_current<br>*_twin_metrics_timeseries</small></div>
+        <div class="lbody">
+          <div class="node twin"><span class="st s-g"></span><h5><span class="nb">04</span>Demand / Customer</h5><span class="m">33 series · 10,083 weekly rows</span><div class="kpi"><span>open demand</span><span>backlog</span><span>forecast state</span><span>WMAPE / bias</span><span>volatility</span><span>top customer</span></div></div>
+          <div class="node twin"><span class="st s-g"></span><h5><span class="nb">05</span>Inventory / Material flow</h5><span class="m">22 items · 44,924 daily rows</span><div class="kpi"><span>on-hand</span><span>days of cover</span><span>stockout / low / over</span><span>projected stockout</span></div></div>
+          <div class="node twin"><span class="st s-g"></span><h5><span class="nb">06</span>Procurement</h5><span class="m">35 supplier × material · 5,571 rows</span><div class="kpi"><span>OTIF</span><span>in-full</span><span>lead time + variability</span><span>rejections</span><span>open POs</span></div></div>
+          <div class="node twin partial"><span class="st s-a"></span><h5><span class="nb">07</span>Production</h5><span class="m">21 items · 6,069 rows · WIP = 0 in data</span><div class="kpi"><span>yield / scrap</span><span>schedule adherence</span><span>routed work</span><span>backlog days</span><span>bottleneck</span></div></div>
+          <div class="node twin"><span class="st s-g"></span><h5><span class="nb">08</span>Distribution / Fulfilment</h5><span class="m">4 shipped series · 1,156 rows</span><div class="kpi"><span>fill 99.5%</span><span>OTIF 88%</span><span>transit plan vs actual</span><span>freight cost</span><span>transport risk</span></div></div>
+        </div>
+      </div>
+      <div class="flow">▼</div>
+
+      <!-- SEMANTIC -->
+      <div class="layer l-sem">
+        <div class="lname">RELATIONSHIP &amp; SEMANTIC<small>views over twins · live, no copy</small></div>
+        <div class="lbody">
+          <div class="node"><span class="st s-g"></span><h5><span class="nb">09</span>Twin network graph</h5><span class="t">v_network_nodes · v_network_edges</span><span class="m">102 nodes (8 types) · 199 edges: SUPPLIES, COMPONENT_OF, PRODUCED_AT, STOCKED_AT, ROUTED_THROUGH, SHIPS_TO, SOLD_TO</span></div>
+          <div class="node"><span class="st s-g"></span><h5><span class="nb">09</span>Planning BOM</h5><span class="t">v_material_bom_edges</span><span class="m">parent → component with qty / scrap / UoM — MRP reads this, not gold</span></div>
+          <div class="node"><span class="st s-g"></span><h5><span class="nb">10</span>UC metric views</h5><span class="t">demand_ · inventory_ · procurement_ · production_ · distribution_metrics</span><span class="m">one governed KPI definition (YAML v1.1) for dashboard, Genie, SQL, agent</span></div>
+        </div>
+      </div>
+      <div class="flow">▼ threshold breaches</div>
+
+      <!-- DETECT -->
+      <div class="layer l-det">
+        <div class="lname">DETECT<small>one cross-twin inbox</small></div>
+        <div class="lbody">
+          <div class="node" style="flex:2 1 340px"><span class="st s-g"></span><h5><span class="nb">13</span>Events</h5><span class="t">events</span><span class="m">25 open events: 9 BOTTLENECK · 5 LOW_COVER · 4 FULFILLMENT_RISK (HIGH) · 4 OVERSTOCK · 3 SUPPLIER_RISK (HIGH). Deterministic rebuild; carries <code>recommended_action</code> for the planning engines.</span></div>
+          <div class="node planned"><span class="st s-r"></span><h5>SQL Alerts / anomaly jobs</h5><span class="m">route events by owner + severity — to add</span></div>
+        </div>
+      </div>
+      <div class="flow">▼ quantify the response</div>
+
+      <!-- PLAN -->
+      <div class="layer l-plan">
+        <div class="lname">PLAN<small>planning engines</small></div>
+        <div class="lbody">
+          <div class="node"><span class="st s-g"></span><h5><span class="nb">14</span>Inventory policy</h5><span class="t">inventory_policy</span><span class="m">split-conformal order-up-to: S* = μ<sub>X</sub> + SS over P = L + R · 22 items (3 PO · 3 PRODUCTION · 16 MRP-dependent) · writes actions onto 9 events</span></div>
+          <div class="node"><span class="st s-g"></span><h5><span class="nb">15</span>Time-phased MRP</h5><span class="t">mrp_plan</span><span class="m">13 weekly buckets · multi-level BOM explosion (levels 0–2) · 33 materials · 429 rows · planned order receipts / releases</span></div>
+          <div class="node planned"><span class="st s-r"></span><h5>Finite scheduler</h5><span class="m">setup-matrix changeovers + OR-Tools sequencing</span></div>
+          <div class="node planned"><span class="st s-r"></span><h5>Distribution &amp; freight-lane optimizer</h5><span class="m">lane / carrier selection over 720 rated offers</span></div>
+          <div class="node planned"><span class="st s-r"></span><h5>Scenario / what-if engine</h5><span class="m">re-run plans on versioned inputs</span></div>
+        </div>
+      </div>
+      <div class="flow">▼</div>
+
+      <!-- CONSUME -->
+      <div class="layer l-use">
+        <div class="lname">CONTROL TOWER<small>consume · explore · explain</small></div>
+        <div class="lbody">
+          <div class="node"><span class="st s-g"></span><h5><span class="nb">11</span>AI/BI dashboard</h5><span class="t">Supply Chain Control Tower</span><span class="m">exec overview + per-twin pages, published on the SQL warehouse</span></div>
+          <div class="node"><span class="st s-g"></span><h5><span class="nb">12</span>Genie space</h5><span class="m">natural-language Q&amp;A over twins + metric views</span></div>
+          <div class="node"><span class="st s-g"></span><h5>Twin Explorer app</h5><span class="t">twin-explorer (Databricks App)</span><span class="m">Streamlit · per-twin drilldowns · interactive network graph (streamlit-agraph) · on-behalf-of-user SQL auth</span></div>
+        </div>
+      </div>
+      <div class="flow">▼ deviation detected → decide</div>
+
+      <!-- RESPOND -->
+      <div class="layer l-resp">
+        <div class="lname">RESPOND<small>agentic orchestration</small></div>
+        <div class="lbody">
+          <div class="node planned"><span class="st s-r"></span><h5>Plan-of-record &amp; scenario store</h5><span class="t">Lakebase (Postgres) + Delta mirror</span><span class="m">draft → simulated → recommended → approved → committed → superseded</span></div>
+          <div class="node planned"><span class="st s-r"></span><h5>Governed agent</h5><span class="t">UC-function tools</span><span class="m">diagnose · run scenario · draft PO expedite / reschedule · cite evidence</span></div>
+          <div class="node planned"><span class="st s-r"></span><h5>Human-in-the-loop gate</h5><span class="m">planner approval for every consequential action · full audit log</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RAIL -->
+    <div class="rail">
+      <div class="rail-card loop">
+        <div class="big">↻</div>
+        <h4>Closed loop</h4>
+        <p style="margin:0">Committed actions in <b>Respond</b> feed back into <b>Plan</b>; the next refresh re-measures the twins against the committed plan and raises new events on drift.</p>
+      </div>
+      <div class="rail-card">
+        <h4>Platform</h4>
+        <ul>
+          <li><b>Unity Catalog</b> — governance, lineage, comments on every column</li>
+          <li><b>Delta</b> tables · views · metric views</li>
+          <li><b>Serverless jobs</b> — notebooks 00–15</li>
+          <li><b>SQL warehouse</b> — Serverless Starter (dashboard, Genie, app)</li>
+          <li><b>Databricks Apps</b> — Twin Explorer</li>
+          <li><b>Lakebase</b> — plan store (planned)</li>
+        </ul>
+      </div>
+      <div class="rail-card">
+        <h4>Contracts</h4>
+        <ul>
+          <li>Source is read-only; derived state → <code>monitoring</code></li>
+          <li>Every notebook parameterised by widgets (catalog / schema / thresholds)</li>
+          <li>Idempotent overwrite rebuilds with a <code>refresh_id</code></li>
+          <li>Tunables only from <code>planning_config</code></li>
+        </ul>
+      </div>
+      <div class="rail-card">
+        <h4>Shared IDs</h4>
+        <ul>
+          <li><code>forecast_version</code> / <code>JobRunId</code></li>
+          <li><code>refresh_id</code> per twin build</li>
+          <li><code>event_id</code> → <code>recommended_action</code></li>
+          <li><code>plan_version_id</code>, <code>agent_trace_id</code> (planned)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= 2. DAG ================= -->
+  <h2 class="section-title"><span class="num">2</span>Build Pipeline &amp; Data Lineage</h2>
+  <p class="section-sub">Notebook dependency graph as executed in the 2026-10-30 refresh (one serverless multi-task run). Arrows show which outputs each step consumes. 11 and 12 are one-time deploy steps for the dashboard and Genie space; they read the tables live and are not re-run on refresh.</p>
+
+  <div class="dag-wrap">
+    <svg viewBox="0 0 1220 495" width="100%" style="min-width:1000px" role="img" aria-label="Notebook dependency graph">
+      <defs>
+        <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#8b6f57"/></marker>
+        <marker id="arp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6b4bb0"/></marker>
+      </defs>
+      <!-- column labels -->
+      <g font-size="11" fill="#7c6b5b" font-weight="700" letter-spacing="1">
+        <text x="20" y="20">SOURCE</text><text x="170" y="20">FOUNDATION</text><text x="330" y="20">FORECAST</text>
+        <text x="490" y="20">TWINS</text><text x="680" y="20">GRAPH · KPI · DETECT</text><text x="880" y="20">PLAN</text><text x="1060" y="20">CONSUME</text>
+      </g>
+
+      <!-- edges (drawn first) -->
+      <g stroke="#b9a48f" stroke-width="1.6" fill="none" marker-end="url(#ar)">
+        <!-- source -> foundation / forecast / twins -->
+        <path d="M130,215 C150,215 150,150 168,150"/>
+        <path d="M130,235 C250,235 250,200 328,200"/>
+        <path d="M130,235 C300,235 400,60 488,60"/>
+        <path d="M130,235 C300,235 400,140 488,140"/>
+        <path d="M130,235 C300,235 400,220 488,220"/>
+        <path d="M130,235 C300,235 400,300 488,300"/>
+        <path d="M130,235 C300,235 400,380 488,380"/>
+        <!-- forecast -> demand twin -->
+        <path d="M448,200 C470,200 465,60 488,60"/>
+        <!-- config -> twins -->
+        <path d="M288,300 C400,300 430,140 488,140"/>
+        <path d="M288,300 C400,300 430,220 488,220"/>
+        <path d="M288,300 C400,300 430,380 488,380"/>
+        <!-- demand twin -> inventory twin -->
+        <path d="M570,78 L570,122"/>
+        <!-- twins -> 09/10/13 -->
+        <path d="M652,140 C665,140 665,90 678,90"/>
+        <path d="M652,220 C665,220 665,200 678,200"/>
+        <path d="M652,300 C665,300 665,310 678,310"/>
+        <path d="M652,60 C665,60 665,310 678,310"/>
+        <path d="M652,380 C665,380 665,310 678,310"/>
+      </g>
+      <g stroke="#6b4bb0" stroke-width="1.8" fill="none" marker-end="url(#arp)">
+        <!-- 13 -> 14, error sets -> 14, 14 -> 15, 09 -> 15 -->
+        <path d="M842,310 C860,310 860,170 878,170"/>
+        <path d="M388,230 C388,440 420,440 600,440 L850,440 C872,440 866,200 878,190"/>
+        <path d="M960,198 L960,282"/>
+        <!-- events <- 14 recommended_action -->
+        <path d="M878,180 C858,180 858,300 842,300" stroke-dasharray="4 3"/>
+      </g>
+      <g stroke="#2e7d52" stroke-width="1.6" fill="none" marker-end="url(#ar)" opacity=".85">
+        <path d="M842,200 C950,200 990,90 1058,90"/>
+        <path d="M842,200 C950,200 990,200 1058,200"/>
+        <path d="M652,60 C760,30 980,40 1058,80" stroke-dasharray="3 3"/>
+        <path d="M842,90 L1058,90"/>
+      </g>
+
+      <!-- nodes -->
+      <g font-size="12">
+        <!-- source -->
+        <rect x="10" y="175" width="120" height="120" rx="12" fill="#f7ecd8" stroke="#b07d2b"/>
+        <text x="70" y="205" text-anchor="middle" font-weight="700" fill="#7a5418">gold_opus5</text>
+        <text x="70" y="224" text-anchor="middle" font-size="10.5" fill="#7a5418">24 tables</text>
+        <text x="70" y="240" text-anchor="middle" font-size="10.5" fill="#7a5418">read-only</text>
+        <text x="70" y="256" text-anchor="middle" font-size="10.5" fill="#7a5418">snapshot</text>
+        <text x="70" y="271" text-anchor="middle" font-size="10.5" fill="#7a5418">2026-08-04</text>
+
+        <!-- foundation -->
+        <rect x="168" y="55" width="120" height="50" rx="10" fill="#fff" stroke="#7b5a3c"/>
+        <text x="228" y="76" text-anchor="middle" font-weight="700" fill="#3b2415">00 · schema</text>
+        <text x="228" y="93" text-anchor="middle" font-size="10" fill="#7c6b5b">monitoring</text>
+        <rect x="168" y="125" width="120" height="50" rx="10" fill="#fff" stroke="#7b5a3c"/>
+        <text x="228" y="146" text-anchor="middle" font-weight="700" fill="#3b2415">01 · readiness</text>
+        <text x="228" y="163" text-anchor="middle" font-size="10" fill="#7c6b5b">inline report</text>
+        <rect x="168" y="275" width="120" height="50" rx="10" fill="#fff" stroke="#7b5a3c"/>
+        <text x="228" y="296" text-anchor="middle" font-weight="700" fill="#3b2415">03 · config</text>
+        <text x="228" y="313" text-anchor="middle" font-size="10" fill="#7c6b5b">planning_config</text>
+
+        <!-- forecast -->
+        <rect x="328" y="170" width="120" height="60" rx="10" fill="#f0ebf8" stroke="#6b4bb0"/>
+        <text x="388" y="192" text-anchor="middle" font-weight="700" fill="#43356b">02 · forecast</text>
+        <text x="388" y="208" text-anchor="middle" font-size="10" fill="#43356b">demandplan · accuracy</text>
+        <text x="388" y="222" text-anchor="middle" font-size="10" fill="#43356b">error_sets · ~14 min</text>
+
+        <!-- twins -->
+        <g>
+          <rect x="488" y="40" width="164" height="38" rx="9" fill="#e8eef8" stroke="#2f5fa8"/>
+          <text x="570" y="64" text-anchor="middle" font-weight="700" fill="#1f437a">04 · demand twin</text>
+          <rect x="488" y="122" width="164" height="38" rx="9" fill="#e8eef8" stroke="#2f5fa8"/>
+          <text x="570" y="146" text-anchor="middle" font-weight="700" fill="#1f437a">05 · inventory twin</text>
+          <rect x="488" y="202" width="164" height="38" rx="9" fill="#e8eef8" stroke="#2f5fa8"/>
+          <text x="570" y="226" text-anchor="middle" font-weight="700" fill="#1f437a">06 · procurement twin</text>
+          <rect x="488" y="282" width="164" height="38" rx="9" fill="#fbeedd" stroke="#c9791b"/>
+          <text x="570" y="306" text-anchor="middle" font-weight="700" fill="#8a5210">07 · production twin</text>
+          <rect x="488" y="362" width="164" height="38" rx="9" fill="#e8eef8" stroke="#2f5fa8"/>
+          <text x="570" y="386" text-anchor="middle" font-weight="700" fill="#1f437a">08 · distribution twin</text>
+        </g>
+
+        <!-- graph / kpi / detect -->
+        <rect x="678" y="70" width="164" height="40" rx="9" fill="#e4f0f5" stroke="#2f6f8f"/>
+        <text x="760" y="88" text-anchor="middle" font-weight="700" fill="#1f4f66">09 · relationship</text>
+        <text x="760" y="103" text-anchor="middle" font-size="10" fill="#1f4f66">nodes · edges · BOM view</text>
+        <rect x="678" y="180" width="164" height="40" rx="9" fill="#e4f0f5" stroke="#2f6f8f"/>
+        <text x="760" y="198" text-anchor="middle" font-weight="700" fill="#1f4f66">10 · metric views</text>
+        <text x="760" y="213" text-anchor="middle" font-size="10" fill="#1f4f66">5 UC metric views</text>
+        <rect x="678" y="290" width="164" height="40" rx="9" fill="#fbe7e4" stroke="#a1432f"/>
+        <text x="760" y="308" text-anchor="middle" font-weight="700" fill="#7a2018">13 · events</text>
+        <text x="760" y="323" text-anchor="middle" font-size="10" fill="#7a2018">25 cross-twin events</text>
+
+        <!-- plan -->
+        <rect x="878" y="150" width="164" height="48" rx="9" fill="#ece7f6" stroke="#4f3a8a"/>
+        <text x="960" y="171" text-anchor="middle" font-weight="700" fill="#33265e">14 · inventory policy</text>
+        <text x="960" y="187" text-anchor="middle" font-size="10" fill="#33265e">conformal order-up-to</text>
+        <rect x="878" y="282" width="164" height="48" rx="9" fill="#ece7f6" stroke="#4f3a8a"/>
+        <text x="960" y="303" text-anchor="middle" font-weight="700" fill="#33265e">15 · MRP</text>
+        <text x="960" y="319" text-anchor="middle" font-size="10" fill="#33265e">13-wk · BOM via nb 09 view</text>
+        <rect x="878" y="380" width="164" height="44" rx="9" fill="#fff" stroke="#c0392b" stroke-dasharray="5 4"/>
+        <text x="960" y="399" text-anchor="middle" font-weight="700" fill="#8e2018">scheduler · optimizer</text>
+        <text x="960" y="414" text-anchor="middle" font-size="10" fill="#8e2018">planned</text>
+        <text x="620" y="455" text-anchor="middle" font-size="10" fill="#6b4bb0">conformal error sets → safety stock</text>
+
+        <!-- consume -->
+        <rect x="1058" y="66" width="150" height="44" rx="9" fill="#e6f4ec" stroke="#2e7d52"/>
+        <text x="1133" y="85" text-anchor="middle" font-weight="700" fill="#1d5b3a">Twin Explorer app</text>
+        <text x="1133" y="100" text-anchor="middle" font-size="10" fill="#1d5b3a">graph + drilldowns</text>
+        <rect x="1058" y="176" width="150" height="48" rx="9" fill="#e6f4ec" stroke="#2e7d52"/>
+        <text x="1133" y="196" text-anchor="middle" font-weight="700" fill="#1d5b3a">11 · dashboard</text>
+        <text x="1133" y="212" text-anchor="middle" font-weight="700" fill="#1d5b3a">12 · Genie</text>
+        <rect x="1058" y="286" width="150" height="48" rx="9" fill="#fff" stroke="#c0392b" stroke-dasharray="5 4"/>
+        <text x="1133" y="306" text-anchor="middle" font-weight="700" fill="#8e2018">Agent + plan store</text>
+        <text x="1133" y="322" text-anchor="middle" font-size="10" fill="#8e2018">Lakebase · HITL · planned</text>
+      </g>
+
+      <!-- loop back -->
+      <path d="M1133,334 C1133,400 1060,402 1046,402" stroke="#c9791b" stroke-width="1.8" fill="none" stroke-dasharray="6 4" marker-end="url(#ar)"/>
+      <text x="1080" y="425" font-size="11" fill="#8a5210" font-weight="700">↻ re-plan loop</text>
+
+      <!-- legend -->
+      <g font-size="10.5" fill="#5a4a3b">
+        <line x1="20" y1="478" x2="50" y2="478" stroke="#b9a48f" stroke-width="1.6"/><text x="56" y="482">data dependency</text>
+        <line x1="170" y1="478" x2="200" y2="478" stroke="#6b4bb0" stroke-width="1.8"/><text x="206" y="482">planning chain</text>
+        <line x1="310" y1="478" x2="340" y2="478" stroke="#6b4bb0" stroke-width="1.8" stroke-dasharray="4 3"/><text x="346" y="482">writes recommended_action back</text>
+        <line x1="530" y1="478" x2="560" y2="478" stroke="#2e7d52" stroke-width="1.6"/><text x="566" y="482">read live by consumers</text>
+      </g>
+    </svg>
+  </div>
+
+  <!-- ================= 3. LAYER DETAILS ================= -->
+  <h2 class="section-title"><span class="num">3</span>Layer Details</h2>
+  <p class="section-sub">What each layer does, how it is built, and the design choices behind it.</p>
+
+  <div class="grid3">
+    <div class="card c-src">
+      <h4>Source — <code>gold_opus5</code> <span class="tag tg">read-only</span></h4>
+      <p>SAP S/4HANA-style gold layer for one roastery &amp; café (plant <code>1000</code>, Oxford Street) selling through counter sales (<code>ZPOS</code>), wholesale (<code>ZOR</code>) and delivery-app orders (<code>ZDEL</code>).</p>
+      <ul>
+        <li>Batch snapshot to 2026-08-04; no live feed.</li>
+        <li>Only <code>ZOR</code> orders are shipped and netted against deliveries (99.3% coverage).</li>
+        <li>Upstream <code>demandplan</code> is ignored — our forecast lives in monitoring.</li>
+      </ul>
+    </div>
+    <div class="card c-found">
+      <h4>Foundation &amp; config <span class="tag tg">nb 00 · 01 · 03</span></h4>
+      <p>Creates the derived schema, profiles every source role before any modelling, and seeds the single registry of business/policy parameters.</p>
+      <ul>
+        <li><code>planning_config</code>: service level, review period, MOQ, holding / ordering cost, detection thresholds.</li>
+        <li>Resolution: most-specific scope wins (<code>MATERIAL</code> &gt; <code>MATERIAL_GROUP</code> &gt; <code>PLANT</code> &gt; <code>GLOBAL</code>).</li>
+        <li>Data-derived params (lead time, demand stats) stay in the twins.</li>
+      </ul>
+    </div>
+    <div class="card c-fcst">
+      <h4>Forecast <span class="tag tg">nb 02</span></h4>
+      <p>Per material × plant × channel weekly forecast from sales history with <code>statsforecast</code> AutoETS (seasonal-naive moving-average fallback for short series).</p>
+      <ul>
+        <li>Versioned: each run demotes the previous <code>IsCurrentVersion</code> and appends.</li>
+        <li>Rolling-origin backtest → <code>demand_forecast_accuracy</code> (WMAPE, bias, PI coverage).</li>
+        <li>Cumulative h-step errors → <code>demand_forecast_error_sets</code> for conformal safety stock.</li>
+      </ul>
+    </div>
+    <div class="card c-twin">
+      <h4>Digital twins <span class="tag tg">nb 04–08</span></h4>
+      <p>The canonical state layer. Every KPI, event, engine, app and agent reads from these — never from raw source tables.</p>
+      <ul>
+        <li>One <code>*_twin_current</code> (latest state, last-365-day window) and one <code>*_twin_metrics_timeseries</code> (full history) per twin.</li>
+        <li>Column comments re-applied on every overwrite so the catalog stays documented.</li>
+        <li>Thresholds come from <code>planning_config</code> via <code>cfg(key, default)</code>.</li>
+      </ul>
+    </div>
+    <div class="card c-sem">
+      <h4>Relationship &amp; semantic layer <span class="tag tg">nb 09 · 10</span></h4>
+      <p>Views first: the twins become one typed graph, and every KPI has exactly one governed definition.</p>
+      <ul>
+        <li>Nodes coloured GREEN / AMBER / RED by twin status; 7 edge types.</li>
+        <li><code>v_material_bom_edges</code> preserves qty / scrap / UoM for MRP.</li>
+        <li>Metric views separate dimensions from measures (<code>MEASURE()</code>).</li>
+      </ul>
+    </div>
+    <div class="card c-det">
+      <h4>Detect — events <span class="tag tg">nb 13</span></h4>
+      <p>A thin, deterministic detection layer: one shared inbox across all twins instead of five event models.</p>
+      <ul>
+        <li>Types: stockout / low cover / overstock, supplier risk, bottleneck / low yield, fulfillment risk, forecast drift.</li>
+        <li>Each row: entity, metric vs threshold, severity, owner, source table, <code>recommended_action</code>.</li>
+        <li>Mutable status / ownership moves to Lakebase later.</li>
+      </ul>
+    </div>
+    <div class="card c-plan">
+      <h4>Plan — inventory policy <span class="tag tg">nb 14</span></h4>
+      <p>Distribution-free order-up-to policy for independent-demand items: <code>S* = μ<sub>X</sub> + SS</code>, with <code>SS</code> the split-conformal quantile of cumulative P-step forecast errors.</p>
+      <ul>
+        <li><code>replenishment_mode</code>: <code>PO</code> (supplier lead time), <code>PRODUCTION</code> (production lead time), <code>MRP_DEPENDENT</code> (handed to MRP).</li>
+        <li>Writes quantified actions onto open inventory events.</li>
+      </ul>
+    </div>
+    <div class="card c-plan">
+      <h4>Plan — MRP <span class="tag tg">nb 15</span></h4>
+      <p>Time-phased weekly MRP over 13 weeks that re-applies nb 14's lead-time-sized policy week by week, then explodes planned production through the BOM.</p>
+      <ul>
+        <li>Low-level coded: parents before components; components get gross requirements from parent releases.</li>
+        <li>Week 1 equals nb 14's "order now?" decision by construction.</li>
+        <li>Outputs projected on-hand, planned receipts and lead-time-offset releases.</li>
+      </ul>
+    </div>
+    <div class="card c-use">
+      <h4>Control tower <span class="tag tg">nb 11 · 12 · app</span></h4>
+      <p>Three ways in, all on the same governed tables and the same SQL warehouse.</p>
+      <ul>
+        <li><b>AI/BI dashboard</b> — executive + per-twin pages.</li>
+        <li><b>Genie</b> — natural-language questions over twins and metric views.</li>
+        <li><b>Twin Explorer</b> — Streamlit app with per-twin filters, time-series drilldowns and the material-centric network graph; queries run as the signed-in user so UC permissions apply.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ================= 4. TABLE INVENTORY ================= -->
+  <h2 class="section-title"><span class="num">4</span>Derived Object Inventory</h2>
+  <p class="section-sub">Everything in <code>mickmickstableawscoff_catalog.monitoring</code> after the 2026-10-30 rebuild.</p>
+
+  <table>
+    <thead><tr><th style="width:26%">Object</th><th style="width:9%">Type</th><th style="width:7%">Built by</th><th class="num" style="width:9%">Rows</th><th>Grain &amp; purpose</th></tr></thead>
+    <tbody>
+      <tr><td><code>planning_config</code> / <code>v_resolved_config</code></td><td>table / view</td><td>nb 03</td><td class="num">16</td><td>Key–value policy parameters with scoped overrides.</td></tr>
+      <tr><td><code>demandplan</code></td><td>table</td><td>nb 02</td><td class="num">429</td><td>Current forecast version: material × plant × channel × week (13 weeks).</td></tr>
+      <tr><td><code>demand_forecast_accuracy</code></td><td>table</td><td>nb 02</td><td class="num">138</td><td>Backtest accuracy per series and forecast version (33 series in the current version; WMAPE, MAE, bias, PI coverage).</td></tr>
+      <tr><td><code>demand_forecast_error_sets</code></td><td>table</td><td>nb 02</td><td class="num">23,166</td><td>Cumulative h-step forecast errors for conformal calibration.</td></tr>
+      <tr><td><code>demand_twin_current</code> / <code>_metrics_timeseries</code></td><td>table</td><td>nb 04</td><td class="num">33 / 10,083</td><td>Firm + open demand, backlog, forecast state and quality per series.</td></tr>
+      <tr><td><code>inventory_twin_current</code> / <code>_metrics_timeseries</code></td><td>table</td><td>nb 05</td><td class="num">22 / 44,924</td><td>On-hand, consumption, days of cover, stockout / overstock flags per item.</td></tr>
+      <tr><td><code>procurement_twin_current</code> / <code>_metrics_timeseries</code></td><td>table</td><td>nb 06</td><td class="num">35 / 5,571</td><td>Supplier × material reliability, lead time, open POs, risk.</td></tr>
+      <tr><td><code>production_twin_current</code> / <code>_metrics_timeseries</code></td><td>table</td><td>nb 07</td><td class="num">21 / 6,069</td><td>Yield, scrap, adherence, routed work content, bottleneck per item.</td></tr>
+      <tr><td><code>distribution_twin_current</code> / <code>_metrics_timeseries</code></td><td>table</td><td>nb 08</td><td class="num">4 / 1,156</td><td>Shipped-series fill rate, OTIF, transit, freight cost, transport risk.</td></tr>
+      <tr><td><code>v_network_nodes</code> / <code>v_network_edges</code></td><td>view</td><td>nb 09</td><td class="num">102 / 199</td><td>Typed twin-network graph for the app.</td></tr>
+      <tr><td><code>v_material_bom_edges</code></td><td>view</td><td>nb 09</td><td class="num">—</td><td>Planning-grade BOM read by MRP.</td></tr>
+      <tr><td><code>*_metrics</code> (5)</td><td>metric view</td><td>nb 10</td><td class="num">—</td><td>Governed KPI definitions per twin.</td></tr>
+      <tr><td><code>events</code></td><td>table</td><td>nb 13 (+14)</td><td class="num">25</td><td>Cross-twin abnormalities with severity, owner and recommended action.</td></tr>
+      <tr><td><code>inventory_policy</code></td><td>table</td><td>nb 14</td><td class="num">22</td><td>Safety stock, order-up-to level, suggested order qty per item.</td></tr>
+      <tr><td><code>mrp_plan</code></td><td>table</td><td>nb 15</td><td class="num">429</td><td>Material × week projected on-hand, planned receipts and releases.</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ================= 5. GAPS ================= -->
+  <h2 class="section-title"><span class="num">5</span>What Is Not Built Yet</h2>
+  <p class="section-sub">The remaining work, split between components to build and data the source does not yet provide.</p>
+
+  <div class="grid2">
+    <div class="card c-resp">
+      <h4>Components to build <span class="tag tr">planned</span></h4>
+      <ul>
+        <li><b>Plan-of-record &amp; scenario store</b> — Lakebase (Postgres) with a Delta mirror; versioned plans, approvals, rollback.</li>
+        <li><b>Governed agent</b> — UC-function tools (diagnose, simulate, draft actions), every call logged, human approval before commit.</li>
+        <li><b>Finite-capacity scheduler</b> — setup-matrix changeovers + OR-Tools sequencing on ROASTER / PACKING.</li>
+        <li><b>Distribution &amp; freight-lane optimizer</b> — carrier / lane selection over the rated lane offers.</li>
+        <li><b>SQL Alerts / anomaly jobs</b> — route events to owners; schedule the refresh as a recurring job.</li>
+      </ul>
+    </div>
+    <div class="card c-det">
+      <h4>Source data gaps <span class="tag ta">data</span></h4>
+      <ul>
+        <li><b>Outlet / DC network</b> — one plant only; the 40 transport destinations are wholesale customers, so the network is single-echelon.</li>
+        <li><b>Open production orders</b> — none at the snapshot, so WIP and work backlog read 0.</li>
+        <li><b>Live feed</b> — batch snapshot to 2026-08-04, about three months behind.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="note">
+    <strong>Guardrails built into the design:</strong> source stays read-only; agents get narrow governed tools rather than table access; every recommendation cites the KPI deviation, impacted entities, root cause, scenario comparison and expected impact; and if data is stale, policies are missing or a solver fails, the agent stops at diagnosis and escalates instead of acting.
+  </div>
+
+  <div class="footer">
+    CoffCoff Agentic Supply Chain · Solution Architecture (as built) · source <code>mickmickstableawscoff_catalog.gold_opus5</code> · derived <code>mickmickstableawscoff_catalog.monitoring</code> · rebuilt 2026-10-30
+  </div>
+
+</div>
+</body>
+</html>

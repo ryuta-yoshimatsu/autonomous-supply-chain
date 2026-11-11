@@ -5,6 +5,6 @@ env:
   - name: DATABRICKS_WAREHOUSE_ID
     valueFrom: sql_warehouse
   - name: TWIN_CATALOG
-    value: "mickmickstableaws_catalog"
+    value: "mickmickstableawscoff_catalog"
   - name: TWIN_SCHEMA
     value: "monitoring"
