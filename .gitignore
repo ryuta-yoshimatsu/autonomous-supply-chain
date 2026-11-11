@@ -31,3 +31,8 @@ build/
 .cursor/
 .isaac/
 .mcp.json
+
+# Internal working notes / workspace-specific resource IDs (not published)
+PROJECT_BRIEF.md
+THREAD_DISCUSSION_RECAP.md
+.databricks-resources.json

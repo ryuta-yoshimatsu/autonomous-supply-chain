@@ -119,9 +119,9 @@ Derive KPIs from the twins (not raw source). Build dashboards + Genie + **direct
 so users can inspect twin state, history, dependencies, and risk — not only KPIs.
 
 **KPI layer — DONE.** Three governed surfaces, each with a reproducible notebook (source of truth).
-Deploy against `<your-profile>`. NOTE: the workspace MCP server config
-(`.cursor/mcp.json`) was repointed from profile `aws` (wrong workspace) to `<your-profile>`;
-if MCP tools aren't reachable, reload the MCP server or use the CLI/SDK as the notebooks do.
+Deploy against your target workspace's CLI profile. Make sure the workspace MCP server config
+(`.cursor/mcp.json`) points at the same profile; if MCP tools aren't reachable, reload the MCP
+server or use the CLI/SDK as the notebooks do.
 1. **Metric views** — `notebooks/10_kpi_metric_views.ipynb` →
    `monitoring.{demand,inventory,procurement,production,distribution}_metrics`. UC metric views
    (`CREATE OR REPLACE VIEW ... WITH METRICS LANGUAGE YAML`) over each `*_twin_current`, with dimensions
